@@ -1,0 +1,55 @@
+groups:
+  - name: iberia-notifications
+    rules:
+      # SRE scenario S3 — the notification delivery queue is backing up: work is arriving
+      # (or being retried) faster than the worker pool can drain it.
+      - alert: NotificationQueueBacklogGrowing
+        expr: |
+          iberia_notification_queue_depth > 100
+          and deriv(iberia_notification_queue_depth[5m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+          service: notifications
+          scenario: S3
+        annotations:
+          summary: "Notification queue backlog is growing ({{ $value }} pending)"
+          description: >
+            iberia_notification_queue_depth has been above 100 and rising for 5m while
+            workers stay pinned. Passengers are not receiving delay/cancellation notices.
+          runbook: "docs/runbooks/NotificationQueueBacklogGrowing.md"
+
+      # The dead-letter queue is filling up: deliveries are failing and (with retries on)
+      # being re-enqueued, i.e. a retry storm.
+      - alert: NotificationDLQGrowing
+        expr: |
+          iberia_notification_dlq_depth > 20
+          and deriv(iberia_notification_dlq_depth[5m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+          service: notifications
+          scenario: S3
+        annotations:
+          summary: "Notification dead-letter queue is growing ({{ $value }} parked)"
+          description: >
+            iberia_notification_dlq_depth is rising: notification deliveries are failing and
+            being retried without backoff, amplifying the backlog (retry storm).
+          runbook: "docs/runbooks/NotificationDLQGrowing.md"
+
+      # Supporting signal: the worker pool is fully saturated for a sustained period.
+      - alert: NotificationWorkersSaturated
+        expr: |
+          iberia_notification_workers_busy >= 3
+          and iberia_notification_queue_depth > 0
+        for: 10m
+        labels:
+          severity: info
+          service: notifications
+          scenario: S3
+        annotations:
+          summary: "Notification worker pool saturated with a non-empty queue"
+          description: >
+            All notification workers have been busy for 10m while items remain queued.
+            Consider scaling workers or draining the queue.
+          runbook: "docs/runbooks/NotificationQueueBacklogGrowing.md"
