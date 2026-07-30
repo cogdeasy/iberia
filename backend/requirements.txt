@@ -9,3 +9,7 @@ bcrypt==4.0.1
 python-multipart==0.0.20
 prometheus-client==0.21.1
 httpx==0.28.1
+# NOTE(demo): planted VULN-152 — legacy pin carried over from the ib-app-prod-02 estate.
+# urllib3 1.26.4 is affected by CVE-2021-33503 (ReDoS in URL parsing, fixed in 1.26.5).
+# Kept for the "vulnerable dependency" demo finding; nothing on the hot path imports it.
+urllib3==1.26.4

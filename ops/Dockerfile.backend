@@ -1,0 +1,37 @@
+# Iberia API container image.
+#
+#   docker build -f ops/Dockerfile.backend -t iberia-api:demo .
+#   docker run --rm -p 8000:8000 -p 5678:5678 iberia-api:demo
+#
+# NOTE(demo): planted VULN-154 — this build is deliberately misconfigured for the security demo
+# (root user, --reload/debug in "production", whole build context copied in, debugger port
+# exposed, secrets baked in as build args). Documented in
+# docs/vulnerabilities/VULN-154-docker-misconfiguration.md — do not harden it.
+
+FROM python:3.10
+
+# Runs as root: no USER instruction anywhere in this file.
+WORKDIR /app
+
+# The entire repository is copied in — including ops/legacy/.env.backup, the .git directory and
+# every local .env — so the image ships the leaked credentials from VULN-153 too.
+COPY . /app
+
+RUN pip install --no-cache-dir -r backend/requirements-dev.txt
+
+# Secrets baked into the image layers and readable via `docker history` / `docker inspect`.
+ENV IBERIA_ENV=production \
+    IBERIA_JWT_SECRET=hs256-iberia-prod-3f9a2b7c41d84e0eb6c5a19d7c2e8f01 \
+    IBERIA_CORS_ORIGINS=* \
+    IBERIA_LOG_LEVEL=DEBUG \
+    PYTHONBREAKPOINT=debugpy.breakpoint \
+    PAYMENT_PROVIDER_API_KEY=pk_live_4d8f21ab9c7e46f0b3a5c81d6e2f9047
+
+WORKDIR /app/backend
+
+# 8000 = API, 5678 = debugpy remote debugger left open from the staging unit file.
+EXPOSE 8000 5678
+
+# --reload in production: the autoreloader watches the writable /app bind mount, so anyone who
+# can write a file into the container gets code execution as root on the next reload.
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload", "--log-level", "debug"]

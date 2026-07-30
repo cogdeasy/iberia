@@ -1,0 +1,250 @@
+{
+  "uid": "iberia-slo",
+  "title": "Iberia — SLOs & Error Budget Burn",
+  "description": "Availability and latency SLOs for the Iberia API with multi-window error-budget burn rates (Google SRE workbook alerting windows).",
+  "tags": ["iberia", "sre", "slo"],
+  "timezone": "browser",
+  "editable": true,
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-6h", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "slo_target",
+        "label": "Availability SLO",
+        "type": "custom",
+        "query": "0.995,0.999,0.99",
+        "current": { "text": "0.995", "value": "0.995" },
+        "options": [
+          { "text": "0.995", "value": "0.995", "selected": true },
+          { "text": "0.999", "value": "0.999", "selected": false },
+          { "text": "0.99", "value": "0.99", "selected": false }
+        ]
+      },
+      {
+        "name": "latency_slo_seconds",
+        "label": "Latency objective (s)",
+        "type": "custom",
+        "query": "0.8,0.5,1",
+        "current": { "text": "0.8", "value": "0.8" },
+        "options": [
+          { "text": "0.8", "value": "0.8", "selected": true },
+          { "text": "0.5", "value": "0.5", "selected": false },
+          { "text": "1", "value": "1", "selected": false }
+        ]
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "row",
+      "title": "Availability SLO",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 }
+    },
+    {
+      "type": "gauge",
+      "title": "Availability (30d rolling)",
+      "datasource": { "type": "prometheus", "uid": "iberia-prometheus" },
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 1 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0.95,
+          "max": 1,
+          "decimals": 4,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "orange", "value": 0.99 },
+              { "color": "green", "value": 0.995 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "1 - (sum(increase(iberia_http_requests_total{status=~\"5..\"}[30d])) / clamp_min(sum(increase(iberia_http_requests_total[30d])), 1))",
+          "legendFormat": "availability"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Error budget remaining (30d)",
+      "datasource": { "type": "prometheus", "uid": "iberia-prometheus" },
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 1 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "orange", "value": 0.25 },
+              { "color": "green", "value": 0.5 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "1 - ((sum(increase(iberia_http_requests_total{status=~\"5..\"}[30d])) / clamp_min(sum(increase(iberia_http_requests_total[30d])), 1)) / (1 - $slo_target))",
+          "legendFormat": "budget left"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Burn rate (1h)",
+      "datasource": { "type": "prometheus", "uid": "iberia-prometheus" },
+      "gridPos": { "h": 6, "w": 6, "x": 12, "y": 1 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 6 },
+              { "color": "red", "value": 14.4 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(sum(rate(iberia_http_requests_total{status=~\"5..\"}[1h])) / clamp_min(sum(rate(iberia_http_requests_total[1h])), 0.001)) / (1 - $slo_target)",
+          "legendFormat": "1h burn"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Burn rate (6h)",
+      "datasource": { "type": "prometheus", "uid": "iberia-prometheus" },
+      "gridPos": { "h": 6, "w": 6, "x": 18, "y": 1 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 3 },
+              { "color": "red", "value": 6 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(sum(rate(iberia_http_requests_total{status=~\"5..\"}[6h])) / clamp_min(sum(rate(iberia_http_requests_total[6h])), 0.001)) / (1 - $slo_target)",
+          "legendFormat": "6h burn"
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "Burn-rate windows",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 7 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Multi-window burn rate (page above 14.4, ticket above 6)",
+      "datasource": { "type": "prometheus", "uid": "iberia-prometheus" },
+      "gridPos": { "h": 9, "w": 16, "x": 0, "y": 8 },
+      "fieldConfig": { "defaults": { "unit": "none", "custom": { "fillOpacity": 5 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max"] } },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(sum(rate(iberia_http_requests_total{status=~\"5..\"}[5m])) / clamp_min(sum(rate(iberia_http_requests_total[5m])), 0.001)) / (1 - $slo_target)",
+          "legendFormat": "5m"
+        },
+        {
+          "refId": "B",
+          "expr": "(sum(rate(iberia_http_requests_total{status=~\"5..\"}[1h])) / clamp_min(sum(rate(iberia_http_requests_total[1h])), 0.001)) / (1 - $slo_target)",
+          "legendFormat": "1h"
+        },
+        {
+          "refId": "C",
+          "expr": "(sum(rate(iberia_http_requests_total{status=~\"5..\"}[6h])) / clamp_min(sum(rate(iberia_http_requests_total[6h])), 0.001)) / (1 - $slo_target)",
+          "legendFormat": "6h"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Error budget consumed (cumulative, 30d window)",
+      "datasource": { "type": "prometheus", "uid": "iberia-prometheus" },
+      "gridPos": { "h": 9, "w": 8, "x": 16, "y": 8 },
+      "fieldConfig": { "defaults": { "unit": "percentunit", "custom": { "fillOpacity": 20 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(sum(increase(iberia_http_requests_total{status=~\"5..\"}[30d])) / clamp_min(sum(increase(iberia_http_requests_total[30d])), 1)) / (1 - $slo_target)",
+          "legendFormat": "budget consumed"
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "Latency SLO",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 17 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Share of requests faster than the latency objective",
+      "datasource": { "type": "prometheus", "uid": "iberia-prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 18 },
+      "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0.9, "max": 1 }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(iberia_http_request_duration_seconds_bucket{le=\"1.0\"}[5m])) / clamp_min(sum(rate(iberia_http_request_duration_seconds_count[5m])), 0.001)",
+          "legendFormat": "fast requests (le 1s bucket)"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "p95 latency vs objective ($latency_slo_seconds s)",
+      "datasource": { "type": "prometheus", "uid": "iberia-prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 18 },
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(iberia_http_request_duration_seconds_bucket[5m])))",
+          "legendFormat": "p95"
+        },
+        {
+          "refId": "B",
+          "expr": "vector($latency_slo_seconds)",
+          "legendFormat": "objective"
+        }
+      ]
+    }
+  ]
+}

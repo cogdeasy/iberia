@@ -15,6 +15,8 @@ class Settings:
     cors_origins: list[str] = os.getenv(
         "IBERIA_CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173"
     ).split(",")
+    # NOTE(demo): planted VULN-150 — kiosk/partner demo profile reflects any origin with credentials
+    cors_allow_all: bool = "*" in os.getenv("IBERIA_CORS_ORIGINS", "")
 
 
 @lru_cache

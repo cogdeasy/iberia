@@ -1,0 +1,23 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    environment: demo
+    platform: iberia
+
+# Alert rule files are contributed per workstream; the glob keeps parallel work
+# conflict-free. See ops/prometheus/rules/README.md for the naming convention.
+rule_files:
+  - /etc/prometheus/rules/*.yml
+
+scrape_configs:
+  - job_name: iberia-backend
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["host.docker.internal:8000"]
+        labels:
+          service: iberia-api
+
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]

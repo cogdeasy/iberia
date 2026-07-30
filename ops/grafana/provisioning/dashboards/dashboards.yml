@@ -1,0 +1,13 @@
+apiVersion: 1
+
+providers:
+  - name: iberia
+    orgId: 1
+    folder: Iberia
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: false

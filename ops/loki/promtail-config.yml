@@ -1,0 +1,40 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+  log_level: warn
+
+positions:
+  filename: /tmp/promtail-positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  # The backend writes JSON lines to stdout; scripts/dev.sh tees them into logs/backend.log,
+  # which is bind-mounted into this container at /var/log/iberia.
+  - job_name: iberia-backend
+    static_configs:
+      - targets: ["localhost"]
+        labels:
+          job: iberia-backend
+          service: iberia-api
+          __path__: /var/log/iberia/*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            level: level
+            logger: logger
+            route: route
+            status: status
+            duration_ms: duration_ms
+            request_id: request_id
+            ts: ts
+      - labels:
+          level:
+          logger:
+          route:
+          status:
+      - timestamp:
+          source: ts
+          format: RFC3339
+          action_on_failure: fudge

@@ -1,0 +1,44 @@
+groups:
+  - name: platform-recording
+    interval: 30s
+    rules:
+      - record: iberia:http_request_rate:rate5m
+        expr: sum(rate(iberia_http_requests_total[5m]))
+      - record: iberia:http_error_ratio:rate5m
+        expr: |
+          sum(rate(iberia_http_requests_total{status=~"5.."}[5m]))
+          / clamp_min(sum(rate(iberia_http_requests_total[5m])), 0.001)
+      - record: iberia:http_latency_p95:rate5m
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum by (le) (rate(iberia_http_request_duration_seconds_bucket[5m]))
+          )
+
+  - name: platform-golden-signals
+    interval: 30s
+    rules:
+      - alert: IberiaApiDown
+        expr: up{job="iberia-backend"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: iberia-api
+          domain: platform
+        annotations:
+          summary: Iberia API is not being scraped (target down)
+          runbook: docs/runbooks/IberiaApiDown.md
+
+      - alert: IberiaApiHighErrorRatio
+        expr: iberia:http_error_ratio:rate5m > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          service: iberia-api
+          domain: platform
+        annotations:
+          summary: More than 5% of Iberia API requests are returning 5xx
+          runbook: docs/runbooks/IberiaApiHighErrorRatio.md
+
+      # IberiaApiLatencyP95High is owned by ops/prometheus/rules/incidents-alerts.yml,
+      # which uses the same threshold on the raw histogram.
