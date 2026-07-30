@@ -1,0 +1,72 @@
+groups:
+  - name: iberia-platform-golden-signals
+    interval: 30s
+    rules:
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(iberia_http_requests_total{status=~"5.."}[5m])) by (route)
+            /
+          sum(rate(iberia_http_requests_total[5m])) by (route)
+            > 0.02
+        for: 5m
+        labels:
+          severity: critical
+          track: sre
+        annotations:
+          summary: '5xx rate above 2% on {{ $labels.route }}'
+          description: >-
+            More than 2% of requests to {{ $labels.route }} have failed for 5 minutes.
+            Passengers see failed bookings, payments or check-ins.
+          runbook: docs/runbooks/HighErrorRate.md
+          dashboard: /ops/reliability
+
+      - alert: HighLatencyP95
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum(rate(iberia_http_request_duration_seconds_bucket[5m])) by (le, route)
+          ) > 0.8
+        for: 10m
+        labels:
+          severity: warning
+          track: sre
+        annotations:
+          summary: 'p95 latency above 800ms on {{ $labels.route }}'
+          description: >-
+            The 95th percentile latency for {{ $labels.route }} has exceeded the 800ms
+            checkout objective for 10 minutes.
+          runbook: docs/runbooks/HighLatencyP95.md
+          dashboard: /ops/reliability
+
+      - alert: ErrorBudgetBurnFast
+        expr: |
+          (
+            sum(rate(iberia_http_requests_total{status=~"5..",route=~"/api/(bookings|payments|checkin).*"}[1h]))
+              /
+            sum(rate(iberia_http_requests_total{route=~"/api/(bookings|payments|checkin).*"}[1h]))
+          ) > 14.4 * 0.005
+        for: 2m
+        labels:
+          severity: critical
+          track: sre
+        annotations:
+          summary: 'Error budget burning at >14x on tier-1 booking flows'
+          description: >-
+            At the current 1h burn rate the 30-day 99.5% availability budget is consumed
+            in under 2 days. Page the service owner.
+          runbook: docs/runbooks/ErrorBudgetBurnFast.md
+          dashboard: /ops/slos
+
+      - alert: TargetDown
+        expr: up{job="iberia-api"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          track: sre
+        annotations:
+          summary: 'Iberia API target {{ $labels.instance }} is down'
+          description: >-
+            Prometheus cannot scrape {{ $labels.instance }}. Either the process is gone or
+            /metrics is failing; all customer journeys are at risk.
+          runbook: docs/runbooks/TargetDown.md
+          dashboard: /ops/reliability
