@@ -1,0 +1,51 @@
+# Alert rules surfaced by GET /api/incidents/alerts.
+# Thresholds here are mirrored in backend/app/services/incidents.py so the ops console and
+# Prometheus agree during the demo. Each alert has a runbook of the same name in docs/runbooks/.
+groups:
+  - name: iberia-incidents
+    interval: 30s
+    rules:
+      - alert: IberiaApiHighErrorRate
+        expr: |
+          sum(rate(iberia_http_requests_total{status=~"5.."}[5m]))
+            / sum(rate(iberia_http_requests_total[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: sev1
+          service: iberia-api
+        annotations:
+          summary: "HTTP 5xx ratio above 5% for 5 minutes"
+          description: >-
+            More than 5% of API requests are failing. Passengers see errors on booking,
+            check-in or rebooking flows.
+          runbook_url: docs/runbooks/IberiaApiHighErrorRate.md
+
+      - alert: IberiaApiLatencyP95High
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum(rate(iberia_http_request_duration_seconds_bucket[5m])) by (le)
+          ) > 0.8
+        for: 10m
+        labels:
+          severity: sev2
+          service: iberia-api
+        annotations:
+          summary: "API p95 latency above 800 ms for 10 minutes"
+          description: >-
+            The 95th percentile request latency breaches the latency SLO; checkout and
+            availability calls feel slow or time out in the app.
+          runbook_url: docs/runbooks/IberiaApiLatencyP95High.md
+
+      - alert: IberiaChaosExperimentActive
+        expr: iberia_chaos_active > 0
+        for: 1m
+        labels:
+          severity: sev3
+          service: iberia-api
+        annotations:
+          summary: "A chaos experiment is active"
+          description: >-
+            Fault injection is enabled on a service. Expected during demos; unexpected
+            otherwise — disable the toggle before drawing conclusions from other alerts.
+          runbook_url: docs/runbooks/IberiaChaosExperimentActive.md
