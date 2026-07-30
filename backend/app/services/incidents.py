@@ -133,34 +133,19 @@ def http_latency_p95_seconds() -> float:
 def active_chaos_toggles() -> list[tuple[str, str]]:
     """``[(target, mode)]`` for active chaos experiments, or ``[]`` when unavailable.
 
-    The reliability workstream owns ``app.services.chaos``; this module must keep working
-    when that PR has not landed yet.
+    The reliability workstream owns ``app.services.chaos``; this module keeps working when
+    that module is absent.
     """
     try:
-        from app.services.chaos import chaos_state
+        from app.services.chaos import list_toggles
     except ImportError:
         return []
 
-    raw = chaos_state() if callable(chaos_state) else chaos_state
-    if isinstance(raw, dict):
-        candidates = list(raw.values())
-    elif isinstance(raw, list | tuple | set):
-        candidates = list(raw)
-    else:
-        return []
-
-    toggles: list[tuple[str, str]] = []
-    for candidate in candidates:
-        if isinstance(candidate, dict):
-            data: dict[str, object] = candidate
-        else:
-            try:
-                data = dict(vars(candidate))
-            except TypeError:
-                continue
-        if data.get("active", True):
-            toggles.append((str(data.get("target", "unknown")), str(data.get("mode", "unknown"))))
-    return toggles
+    return [
+        (str(toggle.get("target", "unknown")), str(toggle.get("mode", "unknown")))
+        for toggle in list_toggles()
+        if toggle.get("active", True)
+    ]
 
 
 def firing_alerts() -> list[dict[str, object]]:
