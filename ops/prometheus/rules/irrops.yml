@@ -1,0 +1,58 @@
+groups:
+  - name: irrops
+    rules:
+      - alert: IrropsRebookingErrorRateHigh
+        expr: |
+          (
+            sum(rate(iberia_http_requests_total{status="500",route=~"/api/irrops/disruptions/.+/rebook"}[5m]))
+            /
+            clamp_min(sum(rate(iberia_http_requests_total{route=~"/api/irrops/disruptions/.+/rebook"}[5m])), 0.001)
+          ) > 0.05
+        for: 2m
+        labels:
+          severity: sev1
+          service: irrops
+          domain: irrops
+          team: airline-operations
+        annotations:
+          summary: "Irregular-ops rebooking is returning 5xx ({{ $value | humanizePercentage }} of requests)"
+          description: >-
+            More than 5% of POST /api/irrops/disruptions/{id}/rebook requests have failed with
+            HTTP 500 for 2 minutes. Disrupted passengers cannot be re-accommodated onto
+            alternative flights.
+          runbook: docs/runbooks/IrropsRebookingErrorRateHigh.md
+          demo_scenario: docs/demo/S2-rebooking-error-spike.md
+          dashboard: ops/grafana/irrops.json
+
+      - alert: IrropsRebookingThroughputStalled
+        expr: |
+          sum(rate(iberia_domain_events_total{domain="irrops",event="rebooked"}[10m])) == 0
+          and
+          sum(rate(iberia_http_requests_total{route=~"/api/irrops/disruptions/.+/rebook"}[10m])) > 0
+        for: 5m
+        labels:
+          severity: sev2
+          service: irrops
+          domain: irrops
+          team: airline-operations
+        annotations:
+          summary: "Rebooking requests are arriving but no PNR has been rebooked for 10 minutes"
+          description: >-
+            Agents are calling the rebooking endpoint but the irrops domain has emitted no
+            `rebooked` events, so re-accommodation is failing silently or erroring.
+          runbook: docs/runbooks/IrropsRebookingErrorRateHigh.md
+
+      - alert: IrropsOpenDisruptionsSpike
+        expr: sum(increase(iberia_domain_events_total{domain="irrops",event=~"disruption_.+"}[15m])) > 10
+        for: 5m
+        labels:
+          severity: sev3
+          service: irrops
+          domain: irrops
+          team: airline-operations
+        annotations:
+          summary: "Unusual number of disruptions declared in the last 15 minutes"
+          description: >-
+            More than 10 disruptions were declared in 15 minutes. Either a genuine irregular-ops
+            day (weather, ATC) or an authorisation problem on POST /api/irrops/disruptions.
+          runbook: docs/runbooks/IrropsRebookingErrorRateHigh.md
