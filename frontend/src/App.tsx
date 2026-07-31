@@ -23,7 +23,7 @@ export default function App() {
     <div className="shell">
       <header className="topbar">
         <NavLink to="/" className="brand" aria-label="Iberia home">
-          <Logo height={30} />
+          <Logo height={32} />
           <span className="brand-sub">Digital Platform</span>
         </NavLink>
         <div className="session">
