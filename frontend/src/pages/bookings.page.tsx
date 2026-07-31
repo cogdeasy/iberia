@@ -71,6 +71,7 @@ const formatTime = (iso: string) =>
 
 export default function BookingsPage() {
   const user = getUser()
+  const signedIn = Boolean(user)
   const [bookings, setBookings] = useState<Booking[]>([])
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
@@ -80,6 +81,12 @@ export default function BookingsPage() {
   const [selectedPassenger, setSelectedPassenger] = useState<number | null>(null)
 
   const load = useCallback(() => {
+    if (!signedIn) {
+      setBookings([])
+      setError(null)
+      setLoading(false)
+      return
+    }
     setLoading(true)
     api<Booking[]>('/api/bookings')
       .then((data) => {
@@ -88,7 +95,7 @@ export default function BookingsPage() {
       })
       .catch((err: Error) => setError(err.message))
       .finally(() => setLoading(false))
-  }, [])
+  }, [signedIn])
 
   useEffect(load, [load])
 

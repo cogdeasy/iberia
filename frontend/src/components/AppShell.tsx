@@ -40,7 +40,7 @@ function AccountMenu({ user }: { user: SessionUser }) {
         {user.full_name.split(' ')[0]} ▾
       </button>
       {open && (
-        <div className="account-menu">
+        <div className="account-menu" onClick={() => setOpen(false)}>
           <div className="account-menu-head">
             <strong>{user.full_name}</strong>
             <span className="muted">

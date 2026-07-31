@@ -4,7 +4,13 @@ import type { PageMeta } from '../lib/pages'
 import { api, getUser } from '../lib/api'
 import SearchWidget from '../components/SearchWidget'
 
-export const meta: PageMeta = { path: '/', section: 'customer', nav: 'none', order: 0 }
+export const meta: PageMeta = {
+  path: '/',
+  title: 'Home',
+  section: 'customer',
+  nav: 'none',
+  order: 0,
+}
 
 interface FlightOffer {
   destination: string

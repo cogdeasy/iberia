@@ -3,7 +3,13 @@ import { Link, useNavigate } from 'react-router-dom'
 import type { PageMeta } from '../lib/pages'
 import { api, setSession, type SessionUser } from '../lib/api'
 
-export const meta: PageMeta = { path: '/login', section: 'customer', nav: 'none', order: 1 }
+export const meta: PageMeta = {
+  path: '/login',
+  title: 'Sign in',
+  section: 'customer',
+  nav: 'none',
+  order: 1,
+}
 
 interface LoginResponse {
   access_token: string
