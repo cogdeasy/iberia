@@ -210,7 +210,7 @@ The incident board is also the stage for two planted findings — see
    correctly rejected with 403. Ask Devin why the two endpoints disagree.
 2. **VULN-130** — post a timeline note containing `<img src=x onerror=alert(document.domain)>`
    and reload the incident detail page as a responder: it executes, because the cell renders with
-   `dangerouslySetInnerHTML`.
+   `[innerHTML]` over a `bypassSecurityTrustHtml` value.
 
 Do **not** fix these during the SRE demo — they are the material for the security demo.
 

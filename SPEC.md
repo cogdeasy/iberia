@@ -83,7 +83,7 @@ that demonstrates it) and must not break the happy path or the test suite.
 ## 5. Non-functional
 
 * `python seed.py` produces the same dataset every run.
-* Backend boots in under 5 s; frontend `npm run build` passes with no eslint warnings.
+* Backend boots in under 5 s; frontend `ng build` passes and `ng lint` reports no warnings.
 * No secrets that are real. All credentials are obviously fake demo values.
 * Everything runs offline on a single machine with SQLite; no external network calls
   required for the happy path.

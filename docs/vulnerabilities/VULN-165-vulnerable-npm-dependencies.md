@@ -10,6 +10,14 @@
 | Location | `frontend/package.json` (`axios@0.21.0`, `lodash@4.17.15`, `js-yaml@3.13.1`), `frontend/package-lock.json` |
 | Introduced by | CVE-remediation demo track |
 
+## Status — pending owner confirmation
+
+The React → Angular migration replaced `frontend/package.json` wholesale. No module ever imported
+`axios`, `lodash` or `js-yaml`, so the three pins were not carried into the Angular manifest and
+this finding is currently **retired by the migration**. Re-add the pins (same versions) to
+`frontend/package.json` if the CVE-remediation demo track still needs them; the description below
+documents the original state.
+
 ## Description
 
 The frontend pins three long-outdated packages, mirroring the "legacy pin carried over from an

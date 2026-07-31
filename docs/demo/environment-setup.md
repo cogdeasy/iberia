@@ -56,7 +56,7 @@ container is running (`docker compose -f ops/docker-compose.observability.yml ps
 
 | Surface | URL | Notes |
 |---------|-----|-------|
-| Customer + ops console | http://localhost:5173 | pages are auto-discovered; nav is grouped Travel / Operations & SRE / Security |
+| Customer + ops console | http://localhost:5173 | routes are registered in `src/app/app.routes.ts`; nav is grouped Travel / Operations & SRE / Security |
 | Support console | http://localhost:5173/support | reply preview, share link, "admin only" broadcast panel (VULN-170/171/172) |
 | API docs | http://127.0.0.1:8000/docs | every mounted router |
 | Golden signals | http://localhost:3000/d/iberia-golden-signals | traffic, errors, latency p50/p95/p99, in-flight, per-route |
@@ -95,4 +95,4 @@ A full reset takes about a minute; between back-to-back runs steps 1, 4 and 5 ar
 | No log streams in Loki | backend started without the `tee` — use `make backend` / `make dev` |
 | `make dev` exits immediately | dependencies missing → `make setup` |
 | Port already in use | `IBERIA_BACKEND_PORT=8001 ./scripts/dev.sh`, or free the port |
-| Frontend 404s on `/api/...` | Vite proxy targets `127.0.0.1:8000`; the backend must listen there |
+| Frontend 404s on `/api/...` | `ng serve` proxy (`frontend/proxy.conf.json`) targets `127.0.0.1:8000`; the backend must listen there |

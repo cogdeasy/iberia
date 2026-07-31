@@ -1,4 +1,4 @@
-# VULN-170 — Reflected XSS in the support message preview (`dangerouslySetInnerHTML`)
+# VULN-170 — Reflected XSS in the support message preview (`bypassSecurityTrustHtml`)
 
 | Field | Value |
 |-------|-------|
@@ -7,7 +7,7 @@
 | CWE | CWE-79 (Improper Neutralization of Input During Web Page Generation) |
 | OWASP Top 10 (2021) | A03:2021 – Injection |
 | Severity | High |
-| Location | `frontend/src/pages/support.page.tsx:194-198` (sink), `backend/app/routers/platform_support.py:71-81` (echo) |
+| Location | `frontend/src/app/pages/support.page.ts` (sink: `bypassSecurityTrustHtml` + `[innerHTML]`), `backend/app/routers/platform_support.py:71-81` (echo) |
 | Introduced by | Workstream 12 — platform (`devin/iberia-platform`) |
 
 ## Description
@@ -22,8 +22,9 @@ html = f"<div class='support-preview'>{payload.body}</div>"
 
 The page then injects that string straight into the DOM:
 
-```tsx
-<div className="notice" dangerouslySetInnerHTML={{ __html: preview.html }} />
+```ts
+// <div class="notice" [innerHTML]="previewHtml"></div>
+this.previewHtml = this.sanitizer.bypassSecurityTrustHtml(preview.html);
 ```
 
 Any markup in the body executes in the victim's origin. With no CSP (VULN-151) the payload can
@@ -61,14 +62,14 @@ VULN-172 — the passenger-wide broadcast function.
 
 ## Intended remediation
 
-* Never render server-supplied HTML: drop `dangerouslySetInnerHTML` and render the body as text
-  (`{preview.text}`), or convert a restricted markdown subset to React elements.
+* Never render server-supplied HTML: drop `bypassSecurityTrustHtml` and render the body as text
+  (`{{ preview.text }}`), or let Angular's default sanitiser strip the markup.
 * If HTML really is required, sanitise with an allow-list (DOMPurify client-side, `bleach`
   server-side) and return escaped text from the API instead of raw markup.
 * Add a strict `Content-Security-Policy` (see VULN-151) as defence in depth.
 
 ## Detection hints
 
-* Grep: `dangerouslySetInnerHTML`, `innerHTML =`, and f-string HTML construction in routers.
+* Grep: `bypassSecurityTrust`, `[innerHTML]`, and f-string HTML construction in routers.
 * The API response for `/api/platform/support/preview` contains the payload verbatim.
 * Test: `backend/tests/test_platform_support.py::test_preview_echoes_html_unsanitised`.

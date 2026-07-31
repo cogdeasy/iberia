@@ -7,17 +7,20 @@
 | CWE | CWE-79 (Improper Neutralization of Input During Web Page Generation) |
 | OWASP Top 10 (2021) | A03:2021 – Injection |
 | Severity | High |
-| Location | `backend/app/routers/incidents.py:203-207` (sink: storage), `frontend/src/pages/incident-detail.page.tsx:179-180` (sink: render), `backend/app/services/incidents.py:248-250` (postmortem interpolation) |
+| Location | `backend/app/routers/incidents.py:203-207` (sink: storage), `frontend/src/app/pages/incident-detail.page.ts` (sink: render, `entryHtml` + `[innerHTML]`), `backend/app/services/incidents.py:248-250` (postmortem interpolation) |
 | Introduced by | Workstream 9 — incidents (branch `devin/iberia-incidents`) |
 
 ## Description
 
 `POST /api/incidents/{id}/timeline` persists the responder note exactly as supplied: there is no
 HTML sanitisation, no allow-list and no output encoding anywhere in the path. The incident detail
-page then renders each note with `dangerouslySetInnerHTML`:
+page then renders each note as raw HTML, explicitly opting out of Angular's sanitiser:
 
-```tsx
-<td dangerouslySetInnerHTML={{ __html: entry.message }} />
+```ts
+entryHtml(entry: TimelineEntry): SafeHtml {
+  return this.sanitizer.bypassSecurityTrustHtml(entry.message);
+}
+// <td [innerHTML]="entryHtml(entry)"></td>
 ```
 
 Any HTML in a timeline note therefore executes in the browser of **every** responder who opens
@@ -68,8 +71,8 @@ payload raises `alert(document.domain)`). A real payload would read
 
 ## Intended remediation
 
-1. Stop rendering user content as HTML: render `{entry.message}` as text (React escapes it), and
-   delete the `dangerouslySetInnerHTML` usage.
+1. Stop rendering user content as HTML: interpolate `{{ entry.message }}` as text (Angular escapes
+   it), and delete the `bypassSecurityTrustHtml` / `[innerHTML]` usage.
 2. If rich text is genuinely required, sanitise server-side with an allow-list
    (e.g. `bleach.clean(message, tags=[...], strip=True)`) on write **and** escape on render.
 3. Escape timeline messages when interpolating them into the postmortem markdown.
@@ -77,7 +80,8 @@ payload raises `alert(document.domain)`). A real payload would read
 
 ## Detection hints
 
-* Grep: `rg 'dangerouslySetInnerHTML' frontend/src` — one hit, in the incident timeline cell.
+* Grep: `rg 'bypassSecurityTrustHtml' frontend/src/app/pages/incident-detail.page.ts` — the
+  incident timeline cell renders the note through `[innerHTML]`.
 * Grep the backend for a write path with no sanitiser:
   `rg -n 'message=payload.message' backend/app`.
 * Test assertion that pins the insecure behaviour:
