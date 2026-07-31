@@ -180,6 +180,33 @@ export default function CheckoutPage() {
     )
   }
 
+  if (booking && (booking.payment_status !== 'unpaid' || booking.status === 'cancelled')) {
+    return (
+      <>
+        <Steps current={3} />
+        <div className="page-head">
+          <h1>Nothing to pay</h1>
+          <p>
+            Booking <strong>{booking.pnr}</strong> is {booking.status} and{' '}
+            {booking.payment_status.replace('_', ' ')}.
+          </p>
+        </div>
+        <div className="card empty">
+          <h3>This booking has already been settled</h3>
+          <p>Re-authorising the card would charge you a second time.</p>
+          <div className="stack">
+            <Link className="btn" to="/bookings">
+              My trips
+            </Link>
+            <Link className="btn ghost" to="/payments">
+              Payments &amp; receipts
+            </Link>
+          </div>
+        </div>
+      </>
+    )
+  }
+
   return (
     <>
       <Steps current={3} />

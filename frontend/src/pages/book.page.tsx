@@ -67,13 +67,20 @@ export default function BookPage() {
   )
   const [contactEmail, setContactEmail] = useState(user?.email ?? '')
   const [error, setError] = useState<string | null>(null)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     if (!flightId) return
     api<FlightOffer>(`/api/flights/${flightId}`)
-      .then(setFlight)
-      .catch(() => setFlight(null))
+      .then((loaded) => {
+        setFlight(loaded)
+        setLoadError(null)
+      })
+      .catch((err: Error) => {
+        setFlight(null)
+        setLoadError(err.message)
+      })
   }, [flightId])
 
   const baseFare = flight ? flight.fare_eur / CABIN_MULTIPLIER[flight.cabin ?? 'economy'] : null
@@ -266,6 +273,8 @@ export default function BookPage() {
                   <span>{total === null ? '—' : `€${total.toFixed(2)}`}</span>
                 </div>
               </>
+            ) : loadError ? (
+              <p className="muted">This flight is no longer available ({loadError}).</p>
             ) : (
               <p className="muted">Loading flight #{flightId}…</p>
             )}
@@ -273,7 +282,7 @@ export default function BookPage() {
               className="btn"
               type="submit"
               form="passenger-form"
-              disabled={saving || !user}
+              disabled={saving || !user || !flight}
               style={{ width: '100%', marginTop: 12 }}
             >
               {saving ? 'Creating booking…' : 'Continue to payment'}
