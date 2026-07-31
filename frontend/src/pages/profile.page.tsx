@@ -3,7 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import type { PageMeta } from '../lib/pages'
 import { api, getToken, setSession, type SessionUser } from '../lib/api'
 
-export const meta: PageMeta = { path: '/profile', title: 'Profile', section: 'customer', order: 2 }
+export const meta: PageMeta = {
+  path: '/profile',
+  title: 'Profile',
+  section: 'customer',
+  nav: 'none',
+  order: 2,
+}
 
 interface Profile extends SessionUser {
   id: number

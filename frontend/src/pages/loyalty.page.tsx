@@ -15,6 +15,7 @@ export const meta: PageMeta = {
   path: '/loyalty',
   title: 'Iberia Plus',
   section: 'customer',
+  nav: 'primary',
   order: 40,
 }
 
@@ -113,10 +114,10 @@ export default function LoyaltyPage() {
 
   return (
     <>
-      <section className="hero">
+      <div className="page-head">
         <h1>Iberia Plus</h1>
         <p>Your Avios balance, tier progress and account activity.</p>
-      </section>
+      </div>
 
       {error && <div className="error">{error}</div>}
       {notice && <div className="notice">{notice}</div>}

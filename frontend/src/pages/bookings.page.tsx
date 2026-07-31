@@ -1,11 +1,13 @@
-import { useCallback, useEffect, useState } from 'react'
+import { Fragment, useCallback, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import type { PageMeta } from '../lib/pages'
 import { api, getUser } from '../lib/api'
 
 export const meta: PageMeta = {
   path: '/bookings',
-  title: 'My bookings',
+  title: 'My trips',
   section: 'customer',
+  nav: 'primary',
   order: 22,
 }
 
@@ -54,6 +56,18 @@ interface SeatMap {
 
 const statusClass = (status: string) =>
   status === 'cancelled' ? 'badge crit' : status === 'confirmed' ? 'badge ok' : 'badge'
+
+const formatDateTime = (iso: string) =>
+  new Date(iso).toLocaleString([], {
+    weekday: 'short',
+    day: '2-digit',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+
+const formatTime = (iso: string) =>
+  new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 
 export default function BookingsPage() {
   const user = getUser()
@@ -123,121 +137,157 @@ export default function BookingsPage() {
 
   return (
     <>
-      <section className="hero">
-        <h1>My bookings</h1>
-        <p>Record locators, seats and payment status for {user?.full_name ?? 'your account'}.</p>
-      </section>
-
-      {error && <div className="error">{error}</div>}
-      {notice && <div className="notice">{notice}</div>}
-      {!user && <div className="notice">Sign in to see your PNRs.</div>}
-
-      <div className="card">
-        <table>
-          <thead>
-            <tr>
-              <th>PNR</th>
-              <th>Flight</th>
-              <th>Departure</th>
-              <th>Cabin</th>
-              <th>Passengers</th>
-              <th>Total</th>
-              <th>Status</th>
-              <th>Payment</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {bookings.map((booking) => (
-              <tr key={booking.pnr}>
-                <td>
-                  <code>{booking.pnr}</code>
-                </td>
-                <td>
-                  {booking.flight.flight_number} · {booking.flight.origin} →{' '}
-                  {booking.flight.destination}
-                </td>
-                <td>{new Date(booking.flight.scheduled_departure).toLocaleString()}</td>
-                <td>{booking.flight.cabin.replace('_', ' ')}</td>
-                <td>
-                  {booking.passengers
-                    .map((p) => `${p.first_name} ${p.last_name}${p.seat ? ` (${p.seat})` : ''}`)
-                    .join(', ')}
-                </td>
-                <td>€{booking.total_eur.toFixed(2)}</td>
-                <td>
-                  <span className={statusClass(booking.status)}>{booking.status}</span>
-                </td>
-                <td>
-                  <span className={booking.payment_status === 'paid' ? 'badge ok' : 'badge warn'}>
-                    {booking.payment_status}
-                  </span>
-                </td>
-                <td>
-                  <button className="btn ghost" onClick={() => openSeatmap(booking)}>
-                    Seats
-                  </button>{' '}
-                  {booking.status !== 'cancelled' && (
-                    <button className="btn ghost" onClick={() => cancel(booking.pnr)}>
-                      Cancel
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
-            {!bookings.length && !loading && (
-              <tr>
-                <td colSpan={9} className="muted">
-                  No bookings yet — search a flight to get started.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+      <div className="page-head">
+        <h1>My trips</h1>
+        <p>
+          Upcoming journeys for {user?.full_name ?? 'your account'} — seats, payment status and
+          cancellations.
+        </p>
       </div>
 
-      {seatmapFor && seatmap && (
-        <div className="card">
-          <h3>Seat map · {seatmapFor}</h3>
-          <div className="field">
-            <label htmlFor="passenger">Assign to passenger</label>
-            <select
-              id="passenger"
-              value={selectedPassenger ?? ''}
-              onChange={(e) => setSelectedPassenger(Number(e.target.value))}
-            >
-              {bookings
-                .find((booking) => booking.pnr === seatmapFor)
-                ?.passengers.map((passenger) => (
-                  <option key={passenger.id} value={passenger.id}>
-                    {passenger.first_name} {passenger.last_name}
-                  </option>
-                ))}
-            </select>
-          </div>
-          <div style={{ display: 'grid', gap: 6 }}>
-            {seatmap.rows.map((row) => (
-              <div key={row.row} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                <span className="muted" style={{ width: 28, fontSize: 12 }}>
-                  {row.row}
-                </span>
-                {row.seats.map((seat) => (
-                  <button
-                    key={seat.seat}
-                    className={seat.available ? 'btn ghost' : 'btn ghost'}
-                    disabled={!seat.available}
-                    onClick={() => assignSeat(seatmapFor, seat.seat)}
-                    style={{ padding: '4px 8px', fontSize: 12 }}
-                  >
-                    {seat.seat}
-                  </button>
-                ))}
-                <span className="badge">{row.seats[0]?.cabin}</span>
-              </div>
-            ))}
-          </div>
+      {error && <div className="error">{error}</div>}
+      {notice && <div className="success">{notice}</div>}
+      {!user && (
+        <div className="notice">
+          <Link to="/login">Sign in</Link> to see your booking references.
         </div>
       )}
+
+      {!bookings.length && !loading && user && (
+        <div className="card empty">
+          <h3>No trips yet</h3>
+          <p>Your booked flights will appear here.</p>
+          <Link className="btn" to="/flights">
+            Search flights
+          </Link>
+        </div>
+      )}
+
+      {bookings.map((booking) => (
+        <section className="card" key={booking.pnr}>
+          <div className="card-title">
+            <div>
+              <div className="datum-label">Booking reference</div>
+              <h2 style={{ letterSpacing: 2 }}>{booking.pnr}</h2>
+            </div>
+            <div className="stack">
+              <span className={statusClass(booking.status)}>{booking.status}</span>
+              <span className={booking.payment_status === 'paid' ? 'badge ok' : 'badge warn'}>
+                {booking.payment_status}
+              </span>
+            </div>
+          </div>
+
+          <div className="flight-card" style={{ marginBottom: 0, border: 'none', padding: 0 }}>
+            <div>
+              <div className="flight-times">
+                <div className="flight-endpoint">
+                  <div className="time">{formatTime(booking.flight.scheduled_departure)}</div>
+                  <div className="place">{booking.flight.origin}</div>
+                </div>
+                <div className="flight-path">
+                  {booking.flight.flight_number}
+                  <div className="line" />
+                  {booking.flight.cabin.replace('_', ' ')}
+                </div>
+                <div className="flight-endpoint">
+                  <div className="time">{formatTime(booking.flight.scheduled_arrival)}</div>
+                  <div className="place">{booking.flight.destination}</div>
+                </div>
+              </div>
+              <div className="flight-meta">
+                <span>{formatDateTime(booking.flight.scheduled_departure)}</span>
+                <span>
+                  {booking.passengers
+                    .map((p) => `${p.first_name} ${p.last_name}${p.seat ? ` · ${p.seat}` : ''}`)
+                    .join(', ')}
+                </span>
+              </div>
+            </div>
+            <div className="flight-buy">
+              <div className="fare">€{booking.total_eur.toFixed(2)}</div>
+              <div className="fare-note">
+                total for {booking.passengers.length} passenger
+                {booking.passengers.length > 1 ? 's' : ''}
+              </div>
+              <div className="stack" style={{ justifyContent: 'flex-end' }}>
+                {booking.payment_status !== 'paid' && (
+                  <Link className="btn sm" to={`/checkout/${booking.pnr}`}>
+                    Pay now
+                  </Link>
+                )}
+                <button className="btn ghost sm" onClick={() => openSeatmap(booking)}>
+                  {seatmapFor === booking.pnr ? 'Hide seats' : 'Choose seats'}
+                </button>
+                {booking.status !== 'cancelled' && (
+                  <button className="btn ghost sm" onClick={() => cancel(booking.pnr)}>
+                    Cancel
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {seatmapFor === booking.pnr && seatmap && (
+            <div style={{ borderTop: '1px solid var(--line)', marginTop: 18, paddingTop: 18 }}>
+              <div className="card-title">
+                <h3>Choose a seat</h3>
+                <div style={{ minWidth: 220 }}>
+                  <select
+                    aria-label="Assign to passenger"
+                    value={selectedPassenger ?? ''}
+                    onChange={(e) => setSelectedPassenger(Number(e.target.value))}
+                  >
+                    {booking.passengers.map((passenger) => (
+                      <option key={passenger.id} value={passenger.id}>
+                        {passenger.first_name} {passenger.last_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="seatmap">
+                {seatmap.rows.map((row) => (
+                  <div className="seat-row" key={row.row}>
+                    <span className="muted" style={{ width: 26, fontSize: 12 }}>
+                      {row.row}
+                    </span>
+                    {row.seats.map((seat, index) => (
+                      <Fragment key={seat.seat}>
+                        {index === Math.ceil(row.seats.length / 2) && (
+                          <span className="seat-aisle" />
+                        )}
+                        <button
+                          className={`seat ${seat.available ? '' : 'is-taken'}`}
+                          disabled={!seat.available}
+                          title={`${seat.seat} · ${seat.cabin} · €${seat.price_eur.toFixed(2)}`}
+                          onClick={() => assignSeat(booking.pnr, seat.seat)}
+                        >
+                          {seat.seat.replace(String(row.row), '')}
+                        </button>
+                      </Fragment>
+                    ))}
+                  </div>
+                ))}
+              </div>
+              <div className="seat-legend">
+                <span>
+                  <i style={{ background: '#f8fafc' }} />
+                  Available
+                </span>
+                <span>
+                  <i style={{ background: 'var(--line)' }} />
+                  Occupied
+                </span>
+                <span>
+                  <i style={{ background: 'var(--ib-red)', borderColor: 'var(--ib-red)' }} />
+                  Selected
+                </span>
+              </div>
+            </div>
+          )}
+        </section>
+      ))}
     </>
   )
 }
