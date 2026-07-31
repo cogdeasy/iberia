@@ -5,7 +5,6 @@ import { clearSession, getUser, type SessionUser } from '../lib/api'
 import Logo from './Logo'
 
 const STAFF_SECTIONS: PageSection[] = ['ops', 'security']
-const STAFF_ROLES = ['agent', 'ops', 'sre', 'admin']
 
 function initials(name: string): string {
   return name
@@ -85,7 +84,10 @@ export default function AppShell({
   const primary = pages.filter(
     (page) => page.nav === 'primary' && page.title && visible(page.roles),
   )
-  const staff = user && STAFF_ROLES.includes(user.role)
+  const staffGroups = STAFF_SECTIONS.map((section) => ({
+    section,
+    items: pages.filter((page) => page.section === section && page.title && visible(page.roles)),
+  })).filter((group) => group.items.length > 0)
   const isHome = location.pathname === '/'
 
   return (
@@ -121,24 +123,18 @@ export default function AppShell({
               {page.title}
             </NavLink>
           ))}
-          {staff && (
+          {staffGroups.length > 0 && (
             <div className="nav-staff">
-              {STAFF_SECTIONS.map((section) => {
-                const items = pages.filter(
-                  (page) => page.section === section && page.title && visible(page.roles),
-                )
-                if (!items.length) return null
-                return (
-                  <div className="nav-staff-group" key={section}>
-                    <span className="nav-staff-label">{SECTION_LABELS[section]}</span>
-                    {items.map((page) => (
-                      <NavLink key={page.path} to={page.path} className="nav-link">
-                        {page.title}
-                      </NavLink>
-                    ))}
-                  </div>
-                )
-              })}
+              {staffGroups.map(({ section, items }) => (
+                <div className="nav-staff-group" key={section}>
+                  <span className="nav-staff-label">{SECTION_LABELS[section]}</span>
+                  {items.map((page) => (
+                    <NavLink key={page.path} to={page.path} className="nav-link">
+                      {page.title}
+                    </NavLink>
+                  ))}
+                </div>
+              ))}
             </div>
           )}
         </div>

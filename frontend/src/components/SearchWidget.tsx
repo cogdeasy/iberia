@@ -107,6 +107,12 @@ export default function SearchWidget({
   const swap = () =>
     setCriteria((current) => ({ ...current, origin: current.destination, destination: current.origin }))
 
+  /** Keeps the select showing the selected IATA code while the airport list is still loading. */
+  const pending = (iata: string) =>
+    iata && !airports.some((airport) => airport.iata === iata) ? (
+      <option value={iata}>{iata}</option>
+    ) : null
+
   const submit = (event: React.FormEvent) => {
     event.preventDefault()
     onSearch(criteriaToParams(criteria), criteria)
@@ -132,6 +138,7 @@ export default function SearchWidget({
           <label htmlFor="origin">From</label>
           <select id="origin" value={criteria.origin} onChange={(e) => set('origin', e.target.value)}>
             <option value="">Any origin</option>
+            {pending(criteria.origin)}
             {airports.map((airport) => (
               <option key={airport.iata} value={airport.iata}>
                 {airport.city} ({airport.iata})
@@ -157,6 +164,7 @@ export default function SearchWidget({
             onChange={(e) => set('destination', e.target.value)}
           >
             <option value="">Any destination</option>
+            {pending(criteria.destination)}
             {airports.map((airport) => (
               <option key={airport.iata} value={airport.iata}>
                 {airport.city} ({airport.iata})

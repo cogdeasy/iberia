@@ -48,8 +48,14 @@ function formatTime(iso: string): string {
   return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 
+/** Date-only strings are parsed as UTC midnight, so pin them to local time before formatting. */
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString([], { weekday: 'short', day: '2-digit', month: 'short' })
+  const value = /^\d{4}-\d{2}-\d{2}$/.test(iso) ? `${iso}T00:00:00` : iso
+  return new Date(value).toLocaleDateString([], {
+    weekday: 'short',
+    day: '2-digit',
+    month: 'short',
+  })
 }
 
 function formatDuration(minutes: number): string {
