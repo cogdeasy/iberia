@@ -125,7 +125,9 @@ export default function HomePage() {
                   <div className="dest-price">
                     <span>from</span>
                     <strong>
-                      {fares[destination.iata] ? `€${Math.round(fares[destination.iata])}` : '—'}
+                      {fares[destination.iata] === undefined
+                        ? '—'
+                        : `€${Math.round(fares[destination.iata])}`}
                     </strong>
                   </div>
                 </div>
