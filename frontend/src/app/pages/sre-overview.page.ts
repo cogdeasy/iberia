@@ -157,7 +157,12 @@ export class SreOverviewPageComponent implements OnInit, OnDestroy {
   chartData: ChartSeries[] = [];
   error: string | null = null;
 
-  async ngOnInit(): Promise<void> {
+  ngOnInit(): void {
+    void this.load();
+    this.timer = setInterval(() => void this.refreshSignals(), 15000);
+  }
+
+  private async load(): Promise<void> {
     try {
       this.services = await this.sre.listServices();
       this.selected = this.selected ?? this.services[0]?.name ?? null;
@@ -165,7 +170,6 @@ export class SreOverviewPageComponent implements OnInit, OnDestroy {
       this.error = err instanceof Error ? err.message : String(err);
     }
     await this.refreshSignals();
-    this.timer = setInterval(() => void this.refreshSignals(), 15000);
   }
 
   ngOnDestroy(): void {

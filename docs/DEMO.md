@@ -108,7 +108,7 @@ High-impact ones to prove live:
 | VULN-191 | Debug endpoint dumps the JWT signing secret and database URL | `curl localhost:8000/api/sre/debug/config` → forge an admin token; full auth bypass |
 | VULN-110 | SSRF in partner webhook registration and test-fire | `POST /api/notifications/webhooks/{id}/test` fetches arbitrary internal URLs |
 | VULN-070 | Path traversal in the travel-document download | `curl --path-as-is localhost:8000/api/checkin/documents/../../app/core/config.py` reads source |
-| VULN-170 | Reflected XSS in the support message preview | payload rendered via `dangerouslySetInnerHTML` |
+| VULN-170 | Reflected XSS in the support message preview | payload rendered via `bypassSecurityTrustHtml` + `[innerHTML]` |
 | VULN-050 | Reversible storage of the full card PAN | "encrypted" with a static XOR key |
 
 Suggested beats:
@@ -133,4 +133,4 @@ Full walkthrough in `docs/demo/security-walkthrough.md`.
 - 12 alert rules across 5 Prometheus rule files, 13 runbooks, 3 scripted incident scenarios.
 - 37 documented, reachable vulnerabilities with individual remediation notes.
 - Built by 12 parallel Devin sessions against a shared contract (`docs/API_CONTRACTS.md`,
-  `AGENTS.md`) with auto-discovered routers, seeders and pages, so nothing collided.
+  `AGENTS.md`) with auto-discovered routers and seeders, so nothing collided.

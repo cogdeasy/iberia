@@ -14,7 +14,7 @@
 
 Two weaknesses compound:
 
-1. The access token is stored in `localStorage` under `iberia.token` (`lib/api.ts`), so it is
+1. The access token is stored in `localStorage` under `iberia.token` (`core/session.service.ts`), so it is
    readable by **any** script running on the origin — exactly what VULN-170 provides.
 2. The support console's *Share this page* button calls `buildShareUrl()`, which copies that same
    token into the URL query string (`?session_token=<jwt>&shared_by=<email>`), pushes it into the

@@ -14,10 +14,13 @@
 
 `POST /api/incidents/{id}/timeline` persists the responder note exactly as supplied: there is no
 HTML sanitisation, no allow-list and no output encoding anywhere in the path. The incident detail
-page then renders each note with `dangerouslySetInnerHTML`:
+page then renders each note as raw HTML, explicitly opting out of Angular's sanitiser:
 
-```tsx
-<td dangerouslySetInnerHTML={{ __html: entry.message }} />
+```ts
+entryHtml(entry: TimelineEntry): SafeHtml {
+  return this.sanitizer.bypassSecurityTrustHtml(entry.message);
+}
+// <td [innerHTML]="entryHtml(entry)"></td>
 ```
 
 Any HTML in a timeline note therefore executes in the browser of **every** responder who opens
@@ -68,8 +71,8 @@ payload raises `alert(document.domain)`). A real payload would read
 
 ## Intended remediation
 
-1. Stop rendering user content as HTML: render `{entry.message}` as text (React escapes it), and
-   delete the `dangerouslySetInnerHTML` usage.
+1. Stop rendering user content as HTML: interpolate `{{ entry.message }}` as text (Angular escapes
+   it), and delete the `bypassSecurityTrustHtml` / `[innerHTML]` usage.
 2. If rich text is genuinely required, sanitise server-side with an allow-list
    (e.g. `bleach.clean(message, tags=[...], strip=True)`) on write **and** escape on render.
 3. Escape timeline messages when interpolating them into the postmortem markdown.

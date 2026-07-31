@@ -1,4 +1,4 @@
-# VULN-170 — Reflected XSS in the support message preview (`dangerouslySetInnerHTML`)
+# VULN-170 — Reflected XSS in the support message preview (`bypassSecurityTrustHtml`)
 
 | Field | Value |
 |-------|-------|
@@ -22,8 +22,9 @@ html = f"<div class='support-preview'>{payload.body}</div>"
 
 The page then injects that string straight into the DOM:
 
-```tsx
-<div className="notice" dangerouslySetInnerHTML={{ __html: preview.html }} />
+```ts
+// <div class="notice" [innerHTML]="previewHtml"></div>
+this.previewHtml = this.sanitizer.bypassSecurityTrustHtml(preview.html);
 ```
 
 Any markup in the body executes in the victim's origin. With no CSP (VULN-151) the payload can
@@ -61,14 +62,14 @@ VULN-172 — the passenger-wide broadcast function.
 
 ## Intended remediation
 
-* Never render server-supplied HTML: drop `dangerouslySetInnerHTML` and render the body as text
-  (`{preview.text}`), or convert a restricted markdown subset to React elements.
+* Never render server-supplied HTML: drop `bypassSecurityTrustHtml` and render the body as text
+  (`{{ preview.text }}`), or let Angular's default sanitiser strip the markup.
 * If HTML really is required, sanitise with an allow-list (DOMPurify client-side, `bleach`
   server-side) and return escaped text from the API instead of raw markup.
 * Add a strict `Content-Security-Policy` (see VULN-151) as defence in depth.
 
 ## Detection hints
 
-* Grep: `dangerouslySetInnerHTML`, `innerHTML =`, and f-string HTML construction in routers.
+* Grep: `bypassSecurityTrust`, `[innerHTML]`, and f-string HTML construction in routers.
 * The API response for `/api/platform/support/preview` contains the payload verbatim.
 * Test: `backend/tests/test_platform_support.py::test_preview_echoes_html_unsanitised`.

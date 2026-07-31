@@ -9,7 +9,8 @@ function detailOf(error: HttpErrorResponse): string {
   const body: unknown = error.error;
   if (body && typeof body === 'object' && 'detail' in body) {
     const detail = (body as { detail: unknown }).detail;
-    return typeof detail === 'string' ? detail : JSON.stringify(detail);
+    if (typeof detail === 'string') return detail;
+    if (detail !== undefined) return JSON.stringify(detail);
   }
   if (typeof body === 'string' && body) return body;
   return `${error.status} ${error.statusText}`;

@@ -150,7 +150,7 @@ interface SeatMap {
                   {{ seat.seat }}
                 </button>
               }
-              <span class="badge">{{ row.seats[0].cabin }}</span>
+              <span class="badge">{{ cabinOf(row) }}</span>
             </div>
           }
         </div>
@@ -189,6 +189,10 @@ export class BookingsPageComponent implements OnInit {
     } finally {
       this.loading = false;
     }
+  }
+
+  cabinOf(row: { seats: Seat[] }): string {
+    return row.seats.length ? row.seats[0].cabin : '';
   }
 
   departureLabel(booking: Booking): string {

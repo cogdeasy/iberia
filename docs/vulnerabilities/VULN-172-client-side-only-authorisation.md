@@ -13,7 +13,7 @@
 ## Description
 
 The `/support` page shows an "Operations broadcast — admin only" panel that sends a message to
-every passenger in an audience. The privilege check exists **only in the React component**: the
+every passenger in an audience. The privilege check exists **only in the Angular component**: the
 panel is rendered for everyone and merely hidden with an inline style driven by the client-side
 role read out of `localStorage`:
 
