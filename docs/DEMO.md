@@ -107,7 +107,7 @@ High-impact ones to prove live:
 | VULN-030 | IDOR on PNR retrieval and cancellation | any authenticated user reads or cancels any booking by PNR |
 | VULN-191 | Debug endpoint dumps the JWT signing secret and database URL | `curl localhost:8000/api/sre/debug/config` → forge an admin token; full auth bypass |
 | VULN-110 | SSRF in partner webhook registration and test-fire | `POST /api/notifications/webhooks/{id}/test` fetches arbitrary internal URLs |
-| VULN-070 | Path traversal in the travel-document download | `curl --path-as-is localhost:8000/api/checkin/documents/../../app/core/config.py` reads source |
+| VULN-070 | Path traversal in the travel-document download | **Remediated** — `curl --path-as-is localhost:8000/api/checkin/documents/../../app/core/config.py` now returns 404 |
 | VULN-170 | Reflected XSS in the support message preview | payload rendered via `dangerouslySetInnerHTML` |
 | VULN-050 | Reversible storage of the full card PAN | "encrypted" with a static XOR key |
 

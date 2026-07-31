@@ -1,5 +1,9 @@
 # VULN-070 — Path traversal / arbitrary file read in the travel-document download
 
+> **Remediated.** `download_document` now accepts a bare filename only and verifies the
+> resolved path is a direct child of the document root before serving it; traversal,
+> absolute-path and sub-directory requests return 404.
+
 | Field | Value |
 |-------|-------|
 | ID | VULN-070 |
@@ -7,7 +11,8 @@
 | CWE | CWE-22 (Improper Limitation of a Pathname to a Restricted Directory) |
 | OWASP Top 10 (2021) | A01:2021 – Broken Access Control |
 | Severity | Critical |
-| Location | `backend/app/routers/checkin.py:65-82` (`download_document`), sink at line 70 |
+| Location | `backend/app/routers/checkin.py:64-83` (`download_document`) |
+| Status | remediated |
 | Introduced by | Workstream 5 — Check-in & Travel Documents |
 
 ## Description
@@ -57,9 +62,13 @@ curl -s --path-as-is "http://127.0.0.1:8000/api/checkin/documents//etc/hostname"
   -H "Authorization: Bearer $TOKEN"
 ```
 
-Expected insecure result: step 2 returns the source of `backend/app/core/config.py`
-(including the `IBERIA_JWT_SECRET` default), and step 3 returns the contents of
-`/etc/hostname`.
+Expected insecure result (before remediation): step 2 returned the source of
+`backend/app/core/config.py` (including the `IBERIA_JWT_SECRET` default), and step 3 the
+contents of `/etc/hostname`.
+
+Expected result now: step 1 still returns the itinerary; steps 2 and 3 return `404 Document
+not found`. The Description/Blast-radius sections below describe the pre-fix behaviour and
+are kept for the demo narrative.
 
 ## Blast radius
 
@@ -90,4 +99,4 @@ generated boarding-pass document, since filenames are predictable
 * Logs: `iberia.checkin` emits `travel document served` with both `filename` and
   `resolved_path` — a `resolved_path` outside `app/documents` or a `filename` containing
   `..` / `%2e%2e` is a live exploit attempt.
-* Test assertion: `backend/tests/test_checkin.py::test_vuln_070_path_traversal_is_present`.
+* Test assertion: `backend/tests/test_checkin.py::test_vuln_070_path_traversal_is_fixed`.

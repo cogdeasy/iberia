@@ -148,16 +148,19 @@ def test_generated_boarding_pass_document_is_downloadable(client, auth_headers):
 # --- planted vulnerabilities: intentional, see docs/vulnerabilities/ ------------------
 
 
-def test_vuln_070_path_traversal_is_present(client, auth_headers):
-    """VULN-070 — documents endpoint escapes its root directory."""
+def test_vuln_070_path_traversal_is_fixed(client, auth_headers):
+    """VULN-070 — documents endpoint must stay inside its root directory."""
+    headers = auth_headers(CUSTOMER)
     # percent-encoded because httpx normalises literal dot-segments away before sending;
     # with a real client use `curl --path-as-is .../documents/../../app/core/config.py`.
-    response = client.get(
-        "/api/checkin/documents/%2e%2e/%2e%2e/app/core/config.py",
-        headers=auth_headers(CUSTOMER),
-    )
-    assert response.status_code == 200
-    assert "class Settings" in response.text
+    for path in (
+        "%2e%2e/%2e%2e/app/core/config.py",
+        "%2e%2e%2f%2e%2e%2fapp/core/config.py",
+        "/etc/passwd",
+        "subdir/itinerary-XK7T2P.txt",
+    ):
+        response = client.get(f"/api/checkin/documents/{path}", headers=headers)
+        assert response.status_code == 404, path
 
 
 def test_vuln_071_idor_on_boarding_pass(client, auth_headers):

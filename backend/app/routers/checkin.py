@@ -1,10 +1,9 @@
 """Check-in, boarding passes, bags and travel-document downloads.
 
 Planted (intentional, documented) weaknesses in this module:
-  * VULN-070 — path traversal in ``GET /api/checkin/documents/{filename}``
   * VULN-071 — IDOR on ``GET /api/checkin/{pnr}/boarding-pass/{passenger_id}``
   * VULN-072 — passport / travel-document numbers in responses and log lines
-See ``docs/vulnerabilities/VULN-070..072-*.md``.
+See ``docs/vulnerabilities/VULN-07*-*.md``.
 """
 
 import logging
@@ -65,11 +64,13 @@ def list_reservations(
 @router.get("/documents/{filename:path}")
 def download_document(filename: str, user: User = Depends(current_user)) -> FileResponse:
     """Serve a generated boarding pass / itinerary from the document store."""
-    # NOTE(demo): planted VULN-070 — the caller-supplied filename is joined straight onto the
-    # document root, so `../../app/core/config.py` escapes the store (CWE-22).
-    target = os.path.join(str(documents_dir()), filename)
-    if not os.path.isfile(target):
-        raise HTTPException(status.HTTP_404_NOT_FOUND, f"Document not found: {filename}")
+    root = documents_dir().resolve()
+    not_found = HTTPException(status.HTTP_404_NOT_FOUND, "Document not found")
+    if filename != os.path.basename(filename) or filename in {"", ".", ".."} or "\x00" in filename:
+        raise not_found
+    target = (root / filename).resolve()
+    if target.parent != root or not target.is_file():
+        raise not_found
     record_domain_event("checkin", "document_downloaded")
     log_event(
         logger,
@@ -77,7 +78,7 @@ def download_document(filename: str, user: User = Depends(current_user)) -> File
         "travel document served",
         actor=user.email,
         filename=filename,
-        resolved_path=target,
+        resolved_path=str(target),
     )
     return FileResponse(target, media_type="application/octet-stream")
 
