@@ -269,6 +269,10 @@ export default function BookingsPage() {
                         </button>
                       </Fragment>
                     ))}
+                    <span className="badge">
+                      {row.seats[0]?.cabin.replace('_', ' ')}
+                      {row.seats[0]?.price_eur ? ` · €${row.seats[0].price_eur.toFixed(2)}` : ' · free'}
+                    </span>
                   </div>
                 ))}
               </div>
