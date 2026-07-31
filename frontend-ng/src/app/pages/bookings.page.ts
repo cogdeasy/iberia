@@ -150,7 +150,7 @@ interface SeatMap {
                   {{ seat.seat }}
                 </button>
               }
-              <span class="badge">{{ row.seats[0]?.cabin }}</span>
+              <span class="badge">{{ row.seats[0].cabin }}</span>
             </div>
           }
         </div>
