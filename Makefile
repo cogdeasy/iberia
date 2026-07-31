@@ -33,17 +33,17 @@ backend: ## run the API on :8000 with reload, teeing JSON logs to logs/backend.l
 	mkdir -p logs
 	cd $(BACKEND) && .venv/bin/uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 2>&1 | tee -a ../logs/backend.log
 
-frontend: ## run the Vite dev server on :5173
+frontend: ## run the Angular dev server (ng serve) on :5173
 	cd $(FRONTEND) && npm run dev
 
 dev: ## run backend + frontend together
 	./scripts/dev.sh
 
-lint: ## ruff (backend) + eslint (frontend)
+lint: ## ruff (backend) + ng lint (frontend)
 	cd $(BACKEND) && .venv/bin/ruff check .
 	cd $(FRONTEND) && npm run lint
 
-test: ## pytest (backend) + typecheck/build (frontend)
+test: ## pytest (backend) + ng build (frontend)
 	cd $(BACKEND) && .venv/bin/pytest
 	cd $(FRONTEND) && npm run build
 

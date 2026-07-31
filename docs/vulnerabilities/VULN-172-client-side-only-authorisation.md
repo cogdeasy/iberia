@@ -7,7 +7,7 @@
 | CWE | CWE-602 (Client-Side Enforcement of Server-Side Security) / CWE-862 (Missing Authorization) |
 | OWASP Top 10 (2021) | A01:2021 – Broken Access Control |
 | Severity | High |
-| Location | `backend/app/routers/platform_support.py:85-117` (no role dependency), `frontend/src/pages/support.page.tsx:52` + `:210-212` (CSS/role gate) |
+| Location | `backend/app/routers/platform_support.py:85-117` (no role dependency), `frontend/src/app/pages/support.page.ts` (`isAdmin` CSS/role gate) |
 | Introduced by | Workstream 12 — platform (`devin/iberia-platform`) |
 
 ## Description

@@ -1,33 +1,45 @@
 {
   "name": "iberia-frontend",
-  "private": true,
   "version": "1.0.0",
-  "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "preview": "vite preview",
-    "lint": "eslint . --max-warnings 0",
-    "typecheck": "tsc --noEmit"
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test",
+    "lint": "ng lint",
+    "dev": "ng serve"
   },
+  "private": true,
   "dependencies": {
-    "axios": "^0.21.0",
-    "js-yaml": "^3.13.1",
-    "lodash": "^4.17.15",
-    "react": "18.3.1",
-    "react-dom": "18.3.1",
-    "react-router-dom": "6.28.0",
-    "recharts": "2.13.3"
+    "@angular/animations": "^18.2.0",
+    "@angular/cdk": "^18.2.14",
+    "@angular/common": "^18.2.0",
+    "@angular/compiler": "^18.2.0",
+    "@angular/core": "^18.2.0",
+    "@angular/forms": "^18.2.0",
+    "@angular/platform-browser": "^18.2.0",
+    "@angular/platform-browser-dynamic": "^18.2.0",
+    "@angular/router": "^18.2.0",
+    "@swimlane/ngx-charts": "^22.0.0",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0",
+    "zone.js": "~0.14.10"
   },
   "devDependencies": {
-    "@types/react": "18.3.12",
-    "@types/react-dom": "18.3.1",
-    "@typescript-eslint/eslint-plugin": "8.15.0",
-    "@typescript-eslint/parser": "8.15.0",
-    "@vitejs/plugin-react": "4.3.4",
-    "eslint": "8.57.1",
-    "eslint-plugin-react-hooks": "5.0.0",
-    "typescript": "5.6.3",
-    "vite": "5.4.11"
+    "@angular-devkit/build-angular": "^18.2.21",
+    "@angular/cli": "^18.2.21",
+    "@angular/compiler-cli": "^18.2.0",
+    "@types/jasmine": "~5.1.0",
+    "angular-eslint": "18.4.3",
+    "eslint": "^9.15.0",
+    "jasmine-core": "~5.2.0",
+    "karma": "~6.4.0",
+    "karma-chrome-launcher": "~3.2.0",
+    "karma-coverage": "~2.2.0",
+    "karma-jasmine": "~5.1.0",
+    "karma-jasmine-html-reporter": "~2.1.0",
+    "typescript": "~5.5.2",
+    "typescript-eslint": "8.16.0"
   }
 }

@@ -7,7 +7,7 @@
 | CWE | CWE-598 (Use of GET Request Method With Sensitive Query Strings) / CWE-522 (Insufficiently Protected Credentials) |
 | OWASP Top 10 (2021) | A02:2021 – Cryptographic Failures (with A07 session-handling impact) |
 | Severity | High |
-| Location | `frontend/src/lib/share.ts:15-24`, `frontend/src/pages/support.page.tsx:121-127` (trigger), `frontend/src/lib/api.ts:1-25` (localStorage store) |
+| Location | `frontend/src/app/core/share.service.ts`, `frontend/src/app/pages/support.page.ts` (trigger), `frontend/src/app/core/session.service.ts` (localStorage store) |
 | Introduced by | Workstream 12 — platform (`devin/iberia-platform`) |
 
 ## Description

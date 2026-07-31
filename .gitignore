@@ -14,4 +14,4 @@ dist/
 .env
 .env.local
 *.log
-frontend/tsconfig.tsbuildinfo
+frontend/.angular/

@@ -7,7 +7,7 @@
 | CWE | CWE-79 (Improper Neutralization of Input During Web Page Generation) |
 | OWASP Top 10 (2021) | A03:2021 – Injection |
 | Severity | High |
-| Location | `frontend/src/pages/support.page.tsx:194-198` (sink), `backend/app/routers/platform_support.py:71-81` (echo) |
+| Location | `frontend/src/app/pages/support.page.ts` (sink: `bypassSecurityTrustHtml` + `[innerHTML]`), `backend/app/routers/platform_support.py:71-81` (echo) |
 | Introduced by | Workstream 12 — platform (`devin/iberia-platform`) |
 
 ## Description

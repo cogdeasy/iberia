@@ -33,7 +33,7 @@ Demo logins (password `Iberia2026!`): `customer@iberia.demo`, `agent@iberia.demo
 
 ```bash
 cd backend  && ruff check . && pytest
-cd frontend && npm run lint && npm run build
+cd frontend && npx ng lint && npx ng build
 ```
 
 ## Documentation
@@ -49,6 +49,7 @@ cd frontend && npm run lint && npm run build
 
 ## Architecture
 
-FastAPI backend (SQLAlchemy 2.0 + SQLite) with **auto-discovered routers**, and a Vite +
-React 18 + TypeScript frontend with **auto-discovered pages** — new domains plug in without
-editing shared registration files.
+FastAPI backend (SQLAlchemy 2.0 + SQLite) with **auto-discovered routers**, and an Angular 18 +
+TypeScript frontend of standalone components with **explicitly registered routes** in
+`frontend/src/app/app.routes.ts` — backend domains plug in without editing shared registration
+files, frontend pages need one route entry.

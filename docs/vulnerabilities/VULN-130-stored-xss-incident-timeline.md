@@ -7,7 +7,7 @@
 | CWE | CWE-79 (Improper Neutralization of Input During Web Page Generation) |
 | OWASP Top 10 (2021) | A03:2021 – Injection |
 | Severity | High |
-| Location | `backend/app/routers/incidents.py:203-207` (sink: storage), `frontend/src/pages/incident-detail.page.tsx:179-180` (sink: render), `backend/app/services/incidents.py:248-250` (postmortem interpolation) |
+| Location | `backend/app/routers/incidents.py:203-207` (sink: storage), `frontend/src/app/pages/incident-detail.page.ts` (sink: render, `entryHtml` + `[innerHTML]`), `backend/app/services/incidents.py:248-250` (postmortem interpolation) |
 | Introduced by | Workstream 9 — incidents (branch `devin/iberia-incidents`) |
 
 ## Description
@@ -77,7 +77,8 @@ payload raises `alert(document.domain)`). A real payload would read
 
 ## Detection hints
 
-* Grep: `rg 'dangerouslySetInnerHTML' frontend/src` — one hit, in the incident timeline cell.
+* Grep: `rg 'bypassSecurityTrustHtml' frontend/src/app/pages/incident-detail.page.ts` — the
+  incident timeline cell renders the note through `[innerHTML]`.
 * Grep the backend for a write path with no sanitiser:
   `rg -n 'message=payload.message' backend/app`.
 * Test assertion that pins the insecure behaviour:
