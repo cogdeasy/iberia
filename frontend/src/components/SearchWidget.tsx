@@ -71,6 +71,9 @@ export default function SearchWidget({
   busy = false,
 }: SearchWidgetProps) {
   const [airports, setAirports] = useState<Airport[]>([])
+  const sort = initial?.sort ?? 'departure'
+  /** Sort is owned by the results page, so it is excluded here: re-seeding on a sort
+   * change would wipe itinerary edits the traveller has typed but not yet submitted. */
   const initialCriteria = useMemo<SearchCriteria>(
     () => ({
       origin: initial?.origin ?? 'MAD',
@@ -78,16 +81,10 @@ export default function SearchWidget({
       date: initial?.date ?? '',
       passengers: initial?.passengers ?? 1,
       cabin: initial?.cabin ?? 'economy',
-      sort: initial?.sort ?? 'departure',
+      sort,
     }),
-    [
-      initial?.origin,
-      initial?.destination,
-      initial?.date,
-      initial?.passengers,
-      initial?.cabin,
-      initial?.sort,
-    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [initial?.origin, initial?.destination, initial?.date, initial?.passengers, initial?.cabin],
   )
   const [criteria, setCriteria] = useState<SearchCriteria>(initialCriteria)
 
@@ -115,7 +112,8 @@ export default function SearchWidget({
 
   const submit = (event: React.FormEvent) => {
     event.preventDefault()
-    onSearch(criteriaToParams(criteria), criteria)
+    const next = { ...criteria, sort }
+    onSearch(criteriaToParams(next), next)
   }
 
   return (
