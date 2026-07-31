@@ -131,7 +131,7 @@ export default function BookPage() {
         <p className="muted">
           Your seats are not held until payment completes. Continue to payment to secure the fare.
         </p>
-        <Link className="btn" to={`/pay/${booking.pnr}`}>
+        <Link className="btn" to={`/checkout/${booking.pnr}`}>
           Continue to payment
         </Link>{' '}
         <button className="btn ghost" onClick={() => navigate('/bookings')}>
