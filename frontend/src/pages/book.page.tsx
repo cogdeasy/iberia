@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import type { PageMeta } from '../lib/pages'
 import { api, getUser } from '../lib/api'
 import Steps from '../components/Steps'
+import { readPassengerCount } from '../components/SearchWidget'
 
 export const meta: PageMeta = { path: '/book/:flightId', section: 'customer', nav: 'none', order: 21 }
 
@@ -54,11 +55,6 @@ const cabinLabel = (cabin: string) => cabin.replace('_', ' ')
 
 function readCabin(value: string | null): string {
   return value && CABINS.includes(value) ? value : 'economy'
-}
-
-function readPassengerCount(value: string | null): number {
-  const count = Number(value)
-  return Number.isFinite(count) ? Math.min(9, Math.max(1, Math.trunc(count))) : 1
 }
 
 export default function BookPage() {
@@ -255,7 +251,7 @@ export default function BookPage() {
                   <span className="muted">
                     Fare × {passengers.length} passenger{passengers.length > 1 ? 's' : ''}
                   </span>
-                  <span>{total === null ? '—' : `€${total.toFixed(2)}`}</span>
+                  <span>{fareEach === null ? '—' : `€${fareEach.toFixed(2)} each`}</span>
                 </div>
                 <div className="summary-row">
                   <span className="muted">Taxes &amp; carrier charges</span>

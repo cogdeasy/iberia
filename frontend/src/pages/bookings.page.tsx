@@ -265,7 +265,7 @@ export default function BookingsPage() {
                           title={`${seat.seat} · ${seat.cabin} · €${seat.price_eur.toFixed(2)}`}
                           onClick={() => assignSeat(booking.pnr, seat.seat)}
                         >
-                          {seat.seat.replace(String(row.row), '')}
+                          {seat.seat.slice(String(row.row).length)}
                         </button>
                       </Fragment>
                     ))}

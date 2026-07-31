@@ -33,16 +33,23 @@ export const CABINS = [
   { value: 'business', label: 'Business' },
 ]
 
+/** Origin and destination are always emitted so an explicit "any" survives the round-trip. */
 export function criteriaToParams(criteria: SearchCriteria): URLSearchParams {
   const params = new URLSearchParams({
+    origin: criteria.origin,
+    destination: criteria.destination,
     passengers: String(criteria.passengers),
     cabin: criteria.cabin,
     sort: criteria.sort,
   })
-  if (criteria.origin) params.set('origin', criteria.origin)
-  if (criteria.destination) params.set('destination', criteria.destination)
   if (criteria.date) params.set('date', criteria.date)
   return params
+}
+
+/** Clamps a query-string passenger count to the 1–9 range the widget offers. */
+export function readPassengerCount(value: string | null): number {
+  const count = Number(value)
+  return Number.isFinite(count) ? Math.min(9, Math.max(1, Math.trunc(count))) : 1
 }
 
 export function today(): string {

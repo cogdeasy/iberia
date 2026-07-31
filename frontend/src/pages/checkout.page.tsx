@@ -63,7 +63,10 @@ export default function CheckoutPage() {
     if (!pnr) return
     api<Booking>(`/api/bookings/${pnr}`)
       .then(setBooking)
-      .catch(() => setBooking(null))
+      .catch((err: Error) => {
+        setBooking(null)
+        setError(err.message)
+      })
   }, [pnr])
 
   async function submit(event: React.FormEvent) {
@@ -320,7 +323,11 @@ export default function CheckoutPage() {
                 </div>
               </>
             ) : (
-              <p className="muted">Loading booking {pnr}…</p>
+              <p className="muted">
+                {error
+                  ? `Booking ${pnr} could not be loaded — sign in or check the reference.`
+                  : `Loading booking ${pnr}…`}
+              </p>
             )}
           </div>
         </aside>

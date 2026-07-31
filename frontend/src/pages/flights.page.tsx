@@ -2,7 +2,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import type { PageMeta } from '../lib/pages'
 import { api } from '../lib/api'
-import SearchWidget, { CABINS, type SearchCriteria } from '../components/SearchWidget'
+import SearchWidget, {
+  CABINS,
+  readPassengerCount,
+  type SearchCriteria,
+} from '../components/SearchWidget'
 
 export const meta: PageMeta = {
   path: '/flights',
@@ -69,7 +73,7 @@ export default function FlightsPage() {
       origin: params.get('origin') ?? 'MAD',
       destination: params.get('destination') ?? 'BCN',
       date: params.get('date') ?? '',
-      passengers: Number(params.get('passengers') ?? 1),
+      passengers: readPassengerCount(params.get('passengers')),
       cabin: params.get('cabin') ?? 'economy',
       sort: params.get('sort') ?? 'departure',
     }),
@@ -102,7 +106,7 @@ export default function FlightsPage() {
   }, [search])
 
   const results = (data?.results ?? []).filter(
-    (offer) => !directOnly || offer.duration_minutes <= 240,
+    (offer) => !directOnly || offer.duration_minutes < 240,
   )
   const cheapest = results.length ? Math.min(...results.map((offer) => offer.fare_eur)) : null
   const cabinLabel = CABINS.find((cabin) => cabin.value === criteria.cabin)?.label ?? 'Economy'
