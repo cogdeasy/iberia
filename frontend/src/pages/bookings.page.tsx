@@ -220,7 +220,7 @@ export default function BookingsPage() {
               <div className="stack" style={{ justifyContent: 'flex-end' }}>
                 {booking.status !== 'cancelled' && (
                   <>
-                    {booking.payment_status !== 'paid' && (
+                    {booking.payment_status === 'unpaid' && (
                       <Link className="btn sm" to={`/checkout/${booking.pnr}`}>
                         Pay now
                       </Link>

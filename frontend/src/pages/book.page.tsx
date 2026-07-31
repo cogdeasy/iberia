@@ -53,6 +53,8 @@ const emptyPassenger = (): PassengerForm => ({
 
 const cabinLabel = (cabin: string) => cabin.replace('_', ' ')
 
+const round2 = (value: number) => Math.round(value * 100) / 100
+
 export default function BookPage() {
   const { flightId } = useParams<{ flightId: string }>()
   const [params] = useSearchParams()
@@ -75,8 +77,9 @@ export default function BookPage() {
   }, [flightId])
 
   const baseFare = flight ? flight.fare_eur / CABIN_MULTIPLIER[flight.cabin ?? 'economy'] : null
-  const fareEach = baseFare === null ? null : baseFare * CABIN_MULTIPLIER[cabin]
-  const total = fareEach === null ? null : fareEach * passengers.length
+  /** Rounded the way `quote_total` does server-side, so the rail matches the amount charged. */
+  const fareEach = baseFare === null ? null : round2(baseFare * CABIN_MULTIPLIER[cabin])
+  const total = fareEach === null ? null : round2(fareEach * passengers.length)
 
   const update = (index: number, field: keyof PassengerForm, value: string) => {
     setPassengers((current) =>
