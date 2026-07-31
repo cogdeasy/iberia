@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import type { PageMeta } from '../lib/pages'
 import { api, getUser } from '../lib/api'
+import Steps from '../components/Steps'
+import { BOOKABLE_CABINS, readCabin, readPassengerCount } from '../components/SearchWidget'
 
-export const meta: PageMeta = { path: '/book/:flightId', section: 'customer', order: 21 }
+export const meta: PageMeta = { path: '/book/:flightId', section: 'customer', nav: 'none', order: 21 }
 
 interface FlightOffer {
   flight_id: number
@@ -34,7 +36,7 @@ interface PassengerForm {
   document_number: string
 }
 
-const CABINS = ['economy', 'premium_economy', 'business', 'first']
+const MAX_PASSENGERS = 9
 const CABIN_MULTIPLIER: Record<string, number> = {
   economy: 1,
   premium_economy: 1.6,
@@ -49,30 +51,42 @@ const emptyPassenger = (): PassengerForm => ({
   document_number: '',
 })
 
+const cabinLabel = (cabin: string) => cabin.replace('_', ' ')
+
+const round2 = (value: number) => Math.round(value * 100) / 100
+
 export default function BookPage() {
   const { flightId } = useParams<{ flightId: string }>()
+  const [params] = useSearchParams()
   const navigate = useNavigate()
   const user = getUser()
   const [flight, setFlight] = useState<FlightOffer | null>(null)
-  const [cabin, setCabin] = useState('economy')
-  const [passengers, setPassengers] = useState<PassengerForm[]>([emptyPassenger()])
+  const [cabin, setCabin] = useState(readCabin(params.get('cabin')))
+  const [passengers, setPassengers] = useState<PassengerForm[]>(
+    Array.from({ length: readPassengerCount(params.get('passengers')) }, emptyPassenger),
+  )
   const [contactEmail, setContactEmail] = useState(user?.email ?? '')
-  const [booking, setBooking] = useState<Booking | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     if (!flightId) return
     api<FlightOffer>(`/api/flights/${flightId}`)
-      .then(setFlight)
-      .catch(() => setFlight(null))
+      .then((loaded) => {
+        setFlight(loaded)
+        setLoadError(null)
+      })
+      .catch((err: Error) => {
+        setFlight(null)
+        setLoadError(err.message)
+      })
   }, [flightId])
 
   const baseFare = flight ? flight.fare_eur / CABIN_MULTIPLIER[flight.cabin ?? 'economy'] : null
-  const estimate =
-    baseFare === null
-      ? null
-      : Math.round(baseFare * CABIN_MULTIPLIER[cabin] * passengers.length * 100) / 100
+  /** Rounded the way `quote_total` does server-side, so the rail matches the amount charged. */
+  const fareEach = baseFare === null ? null : round2(baseFare * CABIN_MULTIPLIER[cabin])
+  const total = fareEach === null ? null : round2(fareEach * passengers.length)
 
   const update = (index: number, field: keyof PassengerForm, value: string) => {
     setPassengers((current) =>
@@ -100,7 +114,7 @@ export default function BookPage() {
           })),
         }),
       })
-      setBooking(created)
+      navigate(`/checkout/${created.pnr}`)
     } catch (err) {
       setError((err as Error).message)
     } finally {
@@ -108,148 +122,177 @@ export default function BookPage() {
     }
   }
 
-  if (booking) {
-    return (
-      <div className="card">
-        <h2>Booking confirmed</h2>
-        <div className="grid cols-3">
-          <div>
-            <div className="kpi-label">Record locator</div>
-            <div className="kpi">{booking.pnr}</div>
-          </div>
-          <div>
-            <div className="kpi-label">Total</div>
-            <div className="kpi">€{booking.total_eur.toFixed(2)}</div>
-          </div>
-          <div>
-            <div className="kpi-label">Payment</div>
-            <div className="kpi">
-              <span className="badge warn">{booking.payment_status}</span>
-            </div>
-          </div>
-        </div>
-        <p className="muted">
-          Your seats are not held until payment completes. Continue to payment to secure the fare.
-        </p>
-        <Link className="btn" to={`/checkout/${booking.pnr}`}>
-          Continue to payment
-        </Link>{' '}
-        <button className="btn ghost" onClick={() => navigate('/bookings')}>
-          View my bookings
-        </button>
-      </div>
-    )
-  }
-
   return (
     <>
-      <section className="hero">
-        <h1>Passenger details</h1>
-        <p>
-          {flight
-            ? `${flight.flight_number} · ${flight.origin} → ${flight.destination} · ${new Date(
-                flight.scheduled_departure,
-              ).toLocaleString()}`
-            : `Flight #${flightId}`}
-        </p>
-      </section>
+      <Steps current={2} />
+
+      <div className="page-head">
+        <h1>Who is travelling?</h1>
+        <p>Names must match the passport or ID used at the airport.</p>
+      </div>
 
       {error && <div className="error">{error}</div>}
-      {!user && <div className="notice">Sign in first — booking requires an authenticated user.</div>}
-
-      <form className="card" onSubmit={submit}>
-        <div className="grid cols-2">
-          <div className="field">
-            <label htmlFor="cabin">Cabin</label>
-            <select id="cabin" value={cabin} onChange={(e) => setCabin(e.target.value)}>
-              {CABINS.map((option) => (
-                <option key={option} value={option}>
-                  {option.replace('_', ' ')}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="field">
-            <label htmlFor="contact">Contact email</label>
-            <input
-              id="contact"
-              type="email"
-              required
-              value={contactEmail}
-              onChange={(e) => setContactEmail(e.target.value)}
-            />
-          </div>
+      {!user && (
+        <div className="notice">
+          <Link to="/login">Sign in</Link> to hold this fare — bookings are tied to your account.
         </div>
+      )}
 
-        {passengers.map((passenger, index) => (
-          <div className="card" key={index}>
-            <h3>Passenger {index + 1}</h3>
-            <div className="grid cols-4">
-              <div className="field">
-                <label htmlFor={`first-${index}`}>First name</label>
-                <input
-                  id={`first-${index}`}
-                  required
-                  value={passenger.first_name}
-                  onChange={(e) => update(index, 'first_name', e.target.value)}
-                />
+      <div className="layout-sidebar" style={{ gridTemplateColumns: '1fr 320px' }}>
+        <form onSubmit={submit} id="passenger-form">
+          {passengers.map((passenger, index) => (
+            <div className="card" key={index}>
+              <div className="card-title">
+                <h3>Passenger {index + 1}</h3>
+                {passengers.length > 1 && (
+                  <button
+                    type="button"
+                    className="btn ghost sm"
+                    onClick={() => setPassengers((c) => c.filter((_, i) => i !== index))}
+                  >
+                    Remove
+                  </button>
+                )}
               </div>
-              <div className="field">
-                <label htmlFor={`last-${index}`}>Last name</label>
-                <input
-                  id={`last-${index}`}
-                  required
-                  value={passenger.last_name}
-                  onChange={(e) => update(index, 'last_name', e.target.value)}
-                />
-              </div>
-              <div className="field">
-                <label htmlFor={`dob-${index}`}>Date of birth</label>
-                <input
-                  id={`dob-${index}`}
-                  type="date"
-                  value={passenger.date_of_birth}
-                  onChange={(e) => update(index, 'date_of_birth', e.target.value)}
-                />
-              </div>
-              <div className="field">
-                <label htmlFor={`doc-${index}`}>Passport number</label>
-                <input
-                  id={`doc-${index}`}
-                  value={passenger.document_number}
-                  onChange={(e) => update(index, 'document_number', e.target.value)}
-                />
+              <div className="grid cols-2">
+                <div className="field">
+                  <label htmlFor={`first-${index}`}>First name</label>
+                  <input
+                    id={`first-${index}`}
+                    required
+                    value={passenger.first_name}
+                    onChange={(e) => update(index, 'first_name', e.target.value)}
+                  />
+                </div>
+                <div className="field">
+                  <label htmlFor={`last-${index}`}>Last name</label>
+                  <input
+                    id={`last-${index}`}
+                    required
+                    value={passenger.last_name}
+                    onChange={(e) => update(index, 'last_name', e.target.value)}
+                  />
+                </div>
+                <div className="field">
+                  <label htmlFor={`dob-${index}`}>Date of birth</label>
+                  <input
+                    id={`dob-${index}`}
+                    type="date"
+                    value={passenger.date_of_birth}
+                    onChange={(e) => update(index, 'date_of_birth', e.target.value)}
+                  />
+                </div>
+                <div className="field">
+                  <label htmlFor={`doc-${index}`}>Passport / ID number</label>
+                  <input
+                    id={`doc-${index}`}
+                    value={passenger.document_number}
+                    onChange={(e) => update(index, 'document_number', e.target.value)}
+                  />
+                </div>
               </div>
             </div>
-            {passengers.length > 1 && (
+          ))}
+
+          <div className="card">
+            <div className="card-title">
+              <h3>Contact &amp; fare</h3>
               <button
                 type="button"
-                className="btn ghost"
-                onClick={() => setPassengers((c) => c.filter((_, i) => i !== index))}
+                className="btn ghost sm"
+                disabled={passengers.length >= MAX_PASSENGERS}
+                onClick={() =>
+                  setPassengers((c) =>
+                    c.length >= MAX_PASSENGERS ? c : [...c, emptyPassenger()],
+                  )
+                }
               >
-                Remove passenger
+                + Add passenger
               </button>
-            )}
+            </div>
+            <div className="grid cols-2">
+              <div className="field">
+                <label htmlFor="contact">Contact email</label>
+                <input
+                  id="contact"
+                  type="email"
+                  required
+                  value={contactEmail}
+                  onChange={(e) => setContactEmail(e.target.value)}
+                />
+                <div className="field-hint">Booking confirmation and disruption alerts go here.</div>
+              </div>
+              <div className="field">
+                <label htmlFor="cabin">Cabin</label>
+                <select id="cabin" value={cabin} onChange={(e) => setCabin(e.target.value)}>
+                  {BOOKABLE_CABINS.map((option) => (
+                    <option key={option} value={option}>
+                      {cabinLabel(option)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </div>
-        ))}
+        </form>
 
-        <div className="grid cols-3">
-          <button
-            type="button"
-            className="btn ghost"
-            onClick={() => setPassengers((c) => [...c, emptyPassenger()])}
-          >
-            Add passenger
-          </button>
-          <div>
-            <div className="kpi-label">Estimated total</div>
-            <div className="kpi">{estimate === null ? '—' : `€${estimate.toFixed(2)}`}</div>
+        <aside>
+          <div className="card summary-card">
+            <h3>Your flight</h3>
+            {flight ? (
+              <>
+                <div className="datum-value">
+                  {flight.origin} → {flight.destination}
+                </div>
+                <p className="muted" style={{ marginTop: 4 }}>
+                  {flight.flight_number} ·{' '}
+                  {new Date(flight.scheduled_departure).toLocaleString([], {
+                    weekday: 'short',
+                    day: '2-digit',
+                    month: 'short',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </p>
+                <div className="summary-row">
+                  <span className="muted">Cabin</span>
+                  <span>{cabinLabel(cabin)}</span>
+                </div>
+                <div className="summary-row">
+                  <span className="muted">
+                    Fare × {passengers.length} passenger{passengers.length > 1 ? 's' : ''}
+                  </span>
+                  <span>{fareEach === null ? '—' : `€${fareEach.toFixed(2)} each`}</span>
+                </div>
+                <div className="summary-row">
+                  <span className="muted">Taxes &amp; carrier charges</span>
+                  <span>included</span>
+                </div>
+                <div className="summary-row total">
+                  <span>Total</span>
+                  <span>{total === null ? '—' : `€${total.toFixed(2)}`}</span>
+                </div>
+              </>
+            ) : loadError ? (
+              <p className="muted">This flight is no longer available ({loadError}).</p>
+            ) : (
+              <p className="muted">Loading flight #{flightId}…</p>
+            )}
+            <button
+              className="btn"
+              type="submit"
+              form="passenger-form"
+              disabled={saving || !user || !flight}
+              style={{ width: '100%', marginTop: 12 }}
+            >
+              {saving ? 'Creating booking…' : 'Continue to payment'}
+            </button>
+            <p className="field-hint" style={{ textAlign: 'center' }}>
+              Seats are held for 20 minutes.
+            </p>
           </div>
-          <button className="btn" type="submit" disabled={saving || !user}>
-            {saving ? 'Creating PNR…' : 'Create booking'}
-          </button>
-        </div>
-      </form>
+        </aside>
+      </div>
     </>
   )
 }

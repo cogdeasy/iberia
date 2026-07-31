@@ -8,6 +8,7 @@ export const meta: PageMeta = {
   path: '/payments',
   title: 'Payments',
   section: 'customer',
+  nav: 'none',
   order: 40,
 }
 
@@ -81,10 +82,10 @@ export default function PaymentsPage() {
 
   return (
     <>
-      <section className="hero">
+      <div className="page-head">
         <h1>Payments</h1>
         <p>Card authorisations taken through the Iberia checkout, and their refunds.</p>
-      </section>
+      </div>
 
       {error ? <div className="error">{error}</div> : null}
 

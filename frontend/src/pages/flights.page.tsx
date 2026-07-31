@@ -1,20 +1,20 @@
-import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import type { PageMeta } from '../lib/pages'
 import { api } from '../lib/api'
+import SearchWidget, {
+  CABINS,
+  readCabin,
+  readPassengerCount,
+  type SearchCriteria,
+} from '../components/SearchWidget'
 
 export const meta: PageMeta = {
   path: '/flights',
-  title: 'Flights',
+  title: 'Book',
   section: 'customer',
+  nav: 'primary',
   order: 10,
-}
-
-interface Airport {
-  iata: string
-  name: string
-  city: string
-  country: string
 }
 
 interface FlightOffer {
@@ -37,12 +37,6 @@ interface SearchResults {
   query_ms: number
 }
 
-const CABINS = [
-  { value: 'economy', label: 'Economy' },
-  { value: 'premium_economy', label: 'Premium economy' },
-  { value: 'business', label: 'Business' },
-]
-
 const SORTS = [
   { value: 'departure', label: 'Departure time' },
   { value: 'fare', label: 'Lowest fare' },
@@ -50,237 +44,204 @@ const SORTS = [
   { value: 'number', label: 'Flight number' },
 ]
 
-function today(): string {
-  return new Date().toISOString().slice(0, 10)
-}
-
 function formatTime(iso: string): string {
   return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 
+/** Date-only strings are parsed as UTC midnight, so pin them to local time before formatting. */
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString([], { day: '2-digit', month: 'short' })
+  const value = /^\d{4}-\d{2}-\d{2}$/.test(iso) ? `${iso}T00:00:00` : iso
+  return new Date(value).toLocaleDateString([], {
+    weekday: 'short',
+    day: '2-digit',
+    month: 'short',
+  })
 }
 
 function formatDuration(minutes: number): string {
   return `${Math.floor(minutes / 60)}h ${String(minutes % 60).padStart(2, '0')}m`
 }
 
-function statusClass(status: string): string {
-  if (status === 'cancelled') return 'badge crit'
-  if (status === 'delayed') return 'badge warn'
-  return 'badge ok'
+function statusBadge(status: string): { className: string; label: string } {
+  if (status === 'cancelled') return { className: 'badge crit', label: 'Cancelled' }
+  if (status === 'delayed') return { className: 'badge warn', label: 'Delayed' }
+  return { className: 'badge ok', label: 'On time' }
 }
 
 export default function FlightsPage() {
-  const [airports, setAirports] = useState<Airport[]>([])
-  const [origin, setOrigin] = useState('MAD')
-  const [destination, setDestination] = useState('BCN')
-  const [date, setDate] = useState('')
-  const [passengers, setPassengers] = useState(1)
-  const [cabin, setCabin] = useState('economy')
-  const [sort, setSort] = useState('departure')
+  const [params, setParams] = useSearchParams()
   const [data, setData] = useState<SearchResults | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [directOnly, setDirectOnly] = useState(false)
+  /** Bumped on every explicit submit so re-running an unchanged search still refetches. */
+  const [attempt, setAttempt] = useState(0)
 
-  useEffect(() => {
-    api<Airport[]>('/api/flights/airports')
-      .then(setAirports)
-      .catch((err: Error) => setError(err.message))
-  }, [])
+  const criteria = useMemo<SearchCriteria>(
+    () => ({
+      origin: params.get('origin') ?? 'MAD',
+      destination: params.get('destination') ?? 'BCN',
+      date: params.get('date') ?? '',
+      passengers: readPassengerCount(params.get('passengers')),
+      cabin: readCabin(params.get('cabin')),
+      sort: params.get('sort') ?? 'departure',
+    }),
+    [params],
+  )
 
   const search = useCallback(() => {
     setLoading(true)
     setError(null)
-    const params = new URLSearchParams({
-      passengers: String(passengers),
-      cabin,
-      sort,
+    const query = new URLSearchParams({
+      passengers: String(criteria.passengers),
+      cabin: criteria.cabin,
+      sort: criteria.sort,
     })
-    if (origin) params.set('origin', origin)
-    if (destination) params.set('destination', destination)
-    if (date) params.set('date', date)
+    if (criteria.origin) query.set('origin', criteria.origin)
+    if (criteria.destination) query.set('destination', criteria.destination)
+    if (criteria.date) query.set('date', criteria.date)
 
-    api<SearchResults>(`/api/flights/search?${params.toString()}`)
+    api<SearchResults>(`/api/flights/search?${query.toString()}`)
       .then(setData)
       .catch((err: Error) => {
         setError(err.message)
         setData(null)
       })
       .finally(() => setLoading(false))
-  }, [origin, destination, date, passengers, cabin, sort])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [criteria, attempt])
 
   useEffect(() => {
     search()
-    // Initial load only; subsequent searches are driven by the form.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [search])
 
-  const onSubmit = (event: React.FormEvent) => {
-    event.preventDefault()
-    search()
-  }
+  const results = (data?.results ?? []).filter(
+    (offer) => !directOnly || offer.duration_minutes < 240,
+  )
+  const cheapest = results.length ? Math.min(...results.map((offer) => offer.fare_eur)) : null
+  const cabinLabel = CABINS.find((cabin) => cabin.value === criteria.cabin)?.label ?? 'Economy'
 
   return (
     <>
-      <section className="hero">
-        <h1>Find a flight</h1>
-        <p>Live schedule, availability and cabin-adjusted fares across the Iberia network.</p>
-      </section>
+      <div className="page-head">
+        <h1>
+          {criteria.origin || 'Anywhere'} → {criteria.destination || 'Anywhere'}
+        </h1>
+        <p>
+          {cabinLabel} · {criteria.passengers} passenger{criteria.passengers > 1 ? 's' : ''}
+          {criteria.date ? ` · ${formatDate(criteria.date)}` : ' · all dates'}
+        </p>
+      </div>
+
+      <SearchWidget
+        initial={criteria}
+        busy={loading}
+        onSearch={(next) => {
+          setParams(next)
+          setAttempt((value) => value + 1)
+        }}
+      />
 
       {error && <div className="error">{error}</div>}
 
-      <form className="card" onSubmit={onSubmit}>
-        <div className="grid cols-3">
-          <div className="field">
-            <label htmlFor="origin">From</label>
-            <select id="origin" value={origin} onChange={(e) => setOrigin(e.target.value)}>
-              <option value="">Any origin</option>
-              {airports.map((a) => (
-                <option key={a.iata} value={a.iata}>
-                  {a.city} ({a.iata})
-                </option>
-              ))}
-            </select>
+      <div className="layout-sidebar">
+        <aside>
+          <div className="card">
+            <h3>Filter</h3>
+            <div className="field">
+              <label htmlFor="sort">Sort by</label>
+              <select
+                id="sort"
+                value={criteria.sort}
+                onChange={(event) => {
+                  const next = new URLSearchParams(params)
+                  next.set('sort', event.target.value)
+                  setParams(next, { replace: true })
+                }}
+              >
+                {SORTS.map((sort) => (
+                  <option key={sort.value} value={sort.value}>
+                    {sort.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontWeight: 500 }}>
+              <input
+                type="checkbox"
+                style={{ width: 16 }}
+                checked={directOnly}
+                onChange={(event) => setDirectOnly(event.target.checked)}
+              />
+              Short-haul only (under 4h)
+            </label>
+            <hr style={{ border: 0, borderTop: '1px solid var(--line)', margin: '16px 0' }} />
+            <div className="summary-row">
+              <span className="muted">Flights found</span>
+              <strong>{results.length}</strong>
+            </div>
+            <div className="summary-row">
+              <span className="muted">Lowest fare</span>
+              <strong>{cheapest === null ? '—' : `€${cheapest.toFixed(2)}`}</strong>
+            </div>
+            <div className="summary-row">
+              <span className="muted">Search time</span>
+              <strong>{data ? `${data.query_ms} ms` : '—'}</strong>
+            </div>
           </div>
-          <div className="field">
-            <label htmlFor="destination">To</label>
-            <select
-              id="destination"
-              value={destination}
-              onChange={(e) => setDestination(e.target.value)}
-            >
-              <option value="">Any destination</option>
-              {airports.map((a) => (
-                <option key={a.iata} value={a.iata}>
-                  {a.city} ({a.iata})
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="field">
-            <label htmlFor="date">Departure date</label>
-            <input
-              id="date"
-              type="date"
-              value={date}
-              min={today()}
-              onChange={(e) => setDate(e.target.value)}
-            />
-          </div>
-          <div className="field">
-            <label htmlFor="passengers">Passengers</label>
-            <select
-              id="passengers"
-              value={passengers}
-              onChange={(e) => setPassengers(Number(e.target.value))}
-            >
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
-                <option key={n} value={n}>
-                  {n}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="field">
-            <label htmlFor="cabin">Cabin</label>
-            <select id="cabin" value={cabin} onChange={(e) => setCabin(e.target.value)}>
-              {CABINS.map((c) => (
-                <option key={c.value} value={c.value}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="field">
-            <label htmlFor="sort">Sort by</label>
-            <select id="sort" value={sort} onChange={(e) => setSort(e.target.value)}>
-              {SORTS.map((s) => (
-                <option key={s.value} value={s.value}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-        <button className="btn" type="submit" disabled={loading}>
-          {loading ? 'Searching…' : 'Search flights'}
-        </button>
-      </form>
+        </aside>
 
-      <div className="grid cols-3">
-        <div className="card">
-          <div className="kpi-label">Offers found</div>
-          <div className="kpi">{data?.count ?? '—'}</div>
-          <p className="muted">for {passengers} passenger(s)</p>
-        </div>
-        <div className="card">
-          <div className="kpi-label">Search latency</div>
-          <div className="kpi">{data ? `${data.query_ms} ms` : '—'}</div>
-          <p className="muted">backend query time</p>
-        </div>
-        <div className="card">
-          <div className="kpi-label">Cabin</div>
-          <div className="kpi">{CABINS.find((c) => c.value === cabin)?.label}</div>
-          <p className="muted">business ≈ 2.5× base fare</p>
-        </div>
-      </div>
-
-      <div className="card">
-        <h2>Results</h2>
-        {!data?.results.length ? (
-          <p className="muted">
-            {loading ? 'Searching the schedule…' : 'No flights match this search.'}
-          </p>
-        ) : (
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Flight</th>
-                <th>Route</th>
-                <th>Departs</th>
-                <th>Arrives</th>
-                <th>Duration</th>
-                <th>Seats</th>
-                <th>Status</th>
-                <th>Fare</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {data.results.map((offer) => (
-                <tr key={offer.flight_id}>
-                  <td>
-                    <strong>{offer.flight_number}</strong>
-                  </td>
-                  <td>
-                    {offer.origin} → {offer.destination}
-                  </td>
-                  <td>
-                    {formatDate(offer.scheduled_departure)} {formatTime(offer.scheduled_departure)}
-                  </td>
-                  <td>
-                    {formatDate(offer.scheduled_arrival)} {formatTime(offer.scheduled_arrival)}
-                  </td>
-                  <td>{formatDuration(offer.duration_minutes)}</td>
-                  <td>{offer.seats_available}</td>
-                  <td>
-                    <span className={statusClass(offer.status)}>{offer.status}</span>
-                  </td>
-                  <td>
-                    <strong>€{offer.fare_eur.toFixed(2)}</strong>
-                  </td>
-                  <td>
-                    <Link className="btn" to={`/book/${offer.flight_id}`}>
-                      Select
+        <div>
+          {!results.length ? (
+            <div className="card empty">
+              <h3>{loading ? 'Searching the schedule…' : 'No flights match this search'}</h3>
+              <p className="muted">Try another date, cabin or destination.</p>
+            </div>
+          ) : (
+            results.map((offer) => {
+              const badge = statusBadge(offer.status)
+              return (
+                <article className="flight-card" key={offer.flight_id}>
+                  <div>
+                    <div className="flight-times">
+                      <div className="flight-endpoint">
+                        <div className="time">{formatTime(offer.scheduled_departure)}</div>
+                        <div className="place">{offer.origin}</div>
+                      </div>
+                      <div className="flight-path">
+                        {formatDuration(offer.duration_minutes)}
+                        <div className="line" />
+                        Direct
+                      </div>
+                      <div className="flight-endpoint">
+                        <div className="time">{formatTime(offer.scheduled_arrival)}</div>
+                        <div className="place">{offer.destination}</div>
+                      </div>
+                    </div>
+                    <div className="flight-meta">
+                      <strong>{offer.flight_number}</strong>
+                      <span>{formatDate(offer.scheduled_departure)}</span>
+                      <span className={badge.className}>{badge.label}</span>
+                      <span>{offer.seats_available} seats left</span>
+                    </div>
+                  </div>
+                  <div className="flight-buy">
+                    <div className="fare">€{offer.fare_eur.toFixed(2)}</div>
+                    <div className="fare-note">
+                      per passenger · {cabinLabel.toLowerCase()}
+                    </div>
+                    <Link
+                      className="btn"
+                      to={`/book/${offer.flight_id}?cabin=${criteria.cabin}&passengers=${criteria.passengers}`}
+                    >
+                      Select fare
                     </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+                  </div>
+                </article>
+              )
+            })
+          )}
+        </div>
       </div>
     </>
   )

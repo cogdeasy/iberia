@@ -6,6 +6,7 @@ export const meta: PageMeta = {
   path: '/checkin',
   title: 'Check-in',
   section: 'customer',
+  nav: 'primary',
   order: 30,
 }
 
@@ -114,78 +115,68 @@ function BoardingPassCard({
   onDocumentError: (err: unknown) => void
 }) {
   return (
-    <div className="card" style={{ borderTop: '4px solid var(--ib-red)' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
-        <div>
-          <div className="kpi-label">Passenger</div>
-          <strong>{boarding.passenger_name}</strong>
-        </div>
-        <span className="badge ok">checked in</span>
-      </div>
-
-      <div className="grid cols-4" style={{ margin: '16px 0' }}>
-        <div>
-          <div className="kpi-label">Flight</div>
-          <div className="kpi" style={{ fontSize: 20 }}>
-            {boarding.flight_number}
-          </div>
-        </div>
-        <div>
-          <div className="kpi-label">Route</div>
-          <div className="kpi" style={{ fontSize: 20 }}>
-            {boarding.origin} → {boarding.destination}
-          </div>
-        </div>
-        <div>
-          <div className="kpi-label">Seat</div>
-          <div className="kpi" style={{ fontSize: 20 }}>
-            {boarding.seat}
-          </div>
-        </div>
-        <div>
-          <div className="kpi-label">Gate</div>
-          <div className="kpi" style={{ fontSize: 20 }}>
-            {boarding.gate}
-          </div>
-        </div>
-      </div>
-
-      <div className="grid cols-3" style={{ marginBottom: 16 }}>
-        <div>
-          <div className="kpi-label">Boarding</div>
-          <div>{formatTime(boarding.boarding_time)}</div>
-        </div>
-        <div>
-          <div className="kpi-label">Sequence</div>
-          <div>{String(boarding.sequence).padStart(4, '0')}</div>
-        </div>
-        <div>
-          <div className="kpi-label">Document</div>
+    <div className="boarding-pass">
+      <div className="boarding-pass-main">
+        <div className="boarding-pass-head">
           <div>
-            <code>{boarding.document_number}</code>
+            <div className="datum-label">Passenger</div>
+            <strong>{boarding.passenger_name}</strong>
+          </div>
+          <span className="badge ok">checked in</span>
+        </div>
+
+        <div className="boarding-pass-grid">
+          <div>
+            <div className="datum-label">Flight</div>
+            <div className="datum-value">{boarding.flight_number}</div>
+          </div>
+          <div>
+            <div className="datum-label">Route</div>
+            <div className="datum-value">
+              {boarding.origin} → {boarding.destination}
+            </div>
+          </div>
+          <div>
+            <div className="datum-label">Boarding</div>
+            <div className="datum-value">{formatTime(boarding.boarding_time)}</div>
+          </div>
+          <div>
+            <div className="datum-label">Sequence</div>
+            <div className="datum-value">{String(boarding.sequence).padStart(4, '0')}</div>
           </div>
         </div>
+
+        <Barcode value={boarding.barcode} />
+
+        <p className="muted" style={{ fontSize: 12, marginBottom: 0 }}>
+          Document <code>{boarding.document_number}</code> · QR{' '}
+          <code>{boarding.qr_payload}</code>
+          {boarding.document_filename ? (
+            <>
+              {' · '}
+              <button
+                className="btn ghost sm"
+                onClick={() => {
+                  openDocument(boarding.document_filename).catch(onDocumentError)
+                }}
+              >
+                Download {boarding.document_filename}
+              </button>
+            </>
+          ) : null}
+        </p>
       </div>
 
-      <Barcode value={boarding.barcode} />
-
-      <p className="muted" style={{ fontSize: 12, marginBottom: 0 }}>
-        QR payload <code>{boarding.qr_payload}</code>
-        {boarding.document_filename ? (
-          <>
-            {' · '}
-            <button
-              className="btn ghost"
-              style={{ padding: '2px 8px', fontSize: 12 }}
-              onClick={() => {
-                openDocument(boarding.document_filename).catch(onDocumentError)
-              }}
-            >
-              Download {boarding.document_filename}
-            </button>
-          </>
-        ) : null}
-      </p>
+      <div className="boarding-pass-stub">
+        <div>
+          <div className="datum-label">Seat</div>
+          <div className="stub-code">{boarding.seat}</div>
+        </div>
+        <div>
+          <div className="datum-label">Gate</div>
+          <div className="stub-code">{boarding.gate}</div>
+        </div>
+      </div>
     </div>
   )
 }
@@ -285,10 +276,13 @@ export default function CheckinPage() {
 
   return (
     <>
-      <section className="hero">
+      <div className="page-head">
         <h1>Online check-in</h1>
-        <p>Confirm your travellers, pick up your boarding pass and add hold bags.</p>
-      </section>
+        <p>
+          Opens 48 hours before departure. Confirm your travellers, get your boarding pass and add
+          hold bags.
+        </p>
+      </div>
 
       {needsLogin ? (
         <div className="notice">
@@ -400,7 +394,7 @@ export default function CheckinPage() {
       {boardingPasses.length ? (
         <>
           <h2>Boarding passes</h2>
-          <div className="grid cols-2">
+          <div>
             {boardingPasses.map((boarding) => (
               <BoardingPassCard
                 key={boarding.passenger_id}

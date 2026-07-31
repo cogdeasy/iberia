@@ -8,6 +8,8 @@ export interface PageMeta {
   /** Label shown in the navigation bar. Omit to hide from navigation. */
   title?: string
   section: PageSection
+  /** Titled customer pages join the main navigation unless this is `'none'`. */
+  nav?: 'primary' | 'none'
   /** Lower numbers appear first in the nav. */
   order?: number
   /** Roles allowed to see the nav entry (empty/undefined = everyone). */

@@ -5,8 +5,9 @@ import { buildShareUrl, copyShareUrl, publishShareUrlToHistory } from '../lib/sh
 
 export const meta: PageMeta = {
   path: '/support',
-  title: 'Support',
+  title: 'Help',
   section: 'customer',
+  nav: 'primary',
   order: 60,
 }
 
@@ -128,10 +129,10 @@ export default function SupportPage() {
 
   return (
     <>
-      <section className="hero">
+      <div className="page-head">
         <h1>Passenger support</h1>
         <p>Support inbox, reply composer and operational broadcasts for the Iberia contact centre.</p>
-      </section>
+      </div>
 
       {error && <div className="error">{error}</div>}
       {status && <div className="notice">{status}</div>}
