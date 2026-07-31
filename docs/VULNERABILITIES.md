@@ -11,7 +11,7 @@ Severity legend: Critical > High > Medium > Low. `Location` is the sink, as reco
 workstream that planted the finding.
 
 
-**37 findings** — Critical: 13 · High: 18 · Medium: 6
+**41 findings** — Critical: 13 · High: 18 · Medium: 6 · Low: 4
 
 | ID | Title | Domain | Severity | CWE | OWASP | Location | Detail |
 |----|-------|--------|----------|-----|-------|----------|--------|
@@ -52,6 +52,10 @@ workstream that planted the finding.
 | VULN-141 | Log injection and audit forgery via unsanitised actor input | security | Medium | CWE-117 (Improper Output Neutralization for Logs) | A09:2021 – Security Logging and Monitoring Failures | `backend/app/services/audit.py:40, backend/app/routers/security.py:63` | [detail](vulnerabilities/VULN-141-audit-log-injection-forgery.md) |
 | VULN-151 | No security response headers (HSTS, CSP, X-Frame-Options, X-Content-Type-Options) | platform | Medium | CWE-693 (Protection Mechanism Failure) | A05:2021 – Security Misconfiguration | `backend/app/routers/platform_support.py:32-55 (posture endpoint documenting the gap); the missing middleware belongs in backend/app/main.py:57 next to CORSMiddleware` | [detail](vulnerabilities/VULN-151-missing-security-headers.md) |
 | VULN-152 | Vulnerable/outdated dependency pinned (urllib3 1.26.4, CVE-2021-33503) | platform | Medium | CWE-1104 (Use of Unmaintained Third Party Components) | A06:2021 – Vulnerable and Outdated Components | `backend/requirements.txt:12-15` | [detail](vulnerabilities/VULN-152-vulnerable-dependency.md) |
+| VULN-160 | No password policy on self-service registration | identity | Low | CWE-521 (Weak Password Requirements) | A07:2021 – Identification and Authentication Failures | `backend/app/routers/identity.py:104-120 (register), backend/app/schemas/identity.py:29-32 (RegisterRequest.password)` | [detail](vulnerabilities/VULN-160-weak-password-policy.md) |
+| VULN-161 | Authenticated PII responses are cacheable (no `Cache-Control: no-store`) | platform | Low | CWE-525 (Use of Web Browser Cache Containing Sensitive Information) | A05:2021 – Security Misconfiguration | `backend/app/core/observability.py (response middleware — no cache headers set)` | [detail](vulnerabilities/VULN-161-missing-cache-control-pii.md) |
+| VULN-162 | Unauthenticated build endpoint discloses versions and host details | platform | Low | CWE-200 (Exposure of Sensitive Information to an Unauthorized Actor) | A05:2021 – Security Misconfiguration | `backend/app/routers/about.py:24-34 (GET /api/about)` | [detail](vulnerabilities/VULN-162-version-disclosure-about.md) |
+| VULN-163 | Interactive API documentation and OpenAPI schema exposed unauthenticated | platform | Low | CWE-200 (Exposure of Sensitive Information to an Unauthorized Actor) | A05:2021 – Security Misconfiguration | `backend/app/main.py (FastAPI created with default docs_url/redoc_url/openapi_url)` | [detail](vulnerabilities/VULN-163-public-openapi-schema.md) |
 
 ## How this file is produced
 
