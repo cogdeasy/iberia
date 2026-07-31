@@ -11,7 +11,8 @@
 | CWE | CWE-22 (Improper Limitation of a Pathname to a Restricted Directory) |
 | OWASP Top 10 (2021) | A01:2021 – Broken Access Control |
 | Severity | Critical |
-| Location | `backend/app/routers/checkin.py:65-82` (`download_document`), sink at line 70 |
+| Location | `backend/app/routers/checkin.py:64-83` (`download_document`) |
+| Status | remediated |
 | Introduced by | Workstream 5 — Check-in & Travel Documents |
 
 ## Description
@@ -94,4 +95,4 @@ generated boarding-pass document, since filenames are predictable
 * Logs: `iberia.checkin` emits `travel document served` with both `filename` and
   `resolved_path` — a `resolved_path` outside `app/documents` or a `filename` containing
   `..` / `%2e%2e` is a live exploit attempt.
-* Test assertion: `backend/tests/test_checkin.py::test_vuln_070_path_traversal_is_present`.
+* Test assertion: `backend/tests/test_checkin.py::test_vuln_070_path_traversal_is_fixed`.
