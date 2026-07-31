@@ -89,11 +89,15 @@ export default function AppShell({
     (page) =>
       page.section === 'customer' && page.nav !== 'none' && page.title && visible(page.roles),
   )
+  /** Staff links are never shown to a customer, whatever roles the page itself declares. */
+  const staffVisible = (roles?: string[]) => {
+    const allowed = roles?.length ? roles.filter((role) => STAFF_ROLES.includes(role)) : STAFF_ROLES
+    return Boolean(user && allowed.includes(user.role))
+  }
   const staffGroups = STAFF_SECTIONS.map((section) => ({
     section,
     items: pages.filter(
-      (page) =>
-        page.section === section && page.title && visible(page.roles?.length ? page.roles : STAFF_ROLES),
+      (page) => page.section === section && page.title && staffVisible(page.roles),
     ),
   })).filter((group) => group.items.length > 0)
   const isHome = location.pathname === '/'

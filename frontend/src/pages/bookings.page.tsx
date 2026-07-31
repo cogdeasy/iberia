@@ -160,6 +160,12 @@ export default function BookingsPage() {
         </div>
       )}
 
+      {loading && !bookings.length && (
+        <div className="card empty">
+          <p className="muted">Loading your trips…</p>
+        </div>
+      )}
+
       {!bookings.length && !loading && user && (
         <div className="card empty">
           <h3>No trips yet</h3>
