@@ -1,5 +1,9 @@
 # VULN-070 — Path traversal / arbitrary file read in the travel-document download
 
+> **Remediated.** `download_document` now accepts a bare filename only and verifies the
+> resolved path is a direct child of the document root before serving it; traversal,
+> absolute-path and sub-directory requests return 404.
+
 | Field | Value |
 |-------|-------|
 | ID | VULN-070 |
