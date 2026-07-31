@@ -65,7 +65,7 @@ def list_reservations(
 def download_document(filename: str, user: User = Depends(current_user)) -> FileResponse:
     """Serve a generated boarding pass / itinerary from the document store."""
     root = documents_dir().resolve()
-    not_found = HTTPException(status.HTTP_404_NOT_FOUND, f"Document not found: {filename}")
+    not_found = HTTPException(status.HTTP_404_NOT_FOUND, "Document not found")
     if filename != os.path.basename(filename) or filename in {"", ".", ".."} or "\x00" in filename:
         raise not_found
     target = (root / filename).resolve()

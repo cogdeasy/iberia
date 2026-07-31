@@ -62,9 +62,13 @@ curl -s --path-as-is "http://127.0.0.1:8000/api/checkin/documents//etc/hostname"
   -H "Authorization: Bearer $TOKEN"
 ```
 
-Expected insecure result: step 2 returns the source of `backend/app/core/config.py`
-(including the `IBERIA_JWT_SECRET` default), and step 3 returns the contents of
-`/etc/hostname`.
+Expected insecure result (before remediation): step 2 returned the source of
+`backend/app/core/config.py` (including the `IBERIA_JWT_SECRET` default), and step 3 the
+contents of `/etc/hostname`.
+
+Expected result now: step 1 still returns the itinerary; steps 2 and 3 return `404 Document
+not found`. The Description/Blast-radius sections below describe the pre-fix behaviour and
+are kept for the demo narrative.
 
 ## Blast radius
 
