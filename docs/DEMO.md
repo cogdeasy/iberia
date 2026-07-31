@@ -49,6 +49,13 @@ Pick one scenario and let Devin drive the triage from the alert:
 | S1 | Checkout latency — payment provider slows, cascades into booking | chaos toggle: `POST /api/sre/chaos {"target":"payments","mode":"latency","magnitude":1500,"ttl_seconds":300}` | `IberiaApiLatencyP95High` | `docs/runbooks/IberiaApiLatencyP95High.md` | `docs/demo/S1-checkout-latency.md` |
 | S2 | Rebooking error spike — irregular-ops rebooking starts 500ing | feature flag: restart the API with `IBERIA_IRROPS_REBOOK_V2=1`, then drive traffic to `POST /api/irrops/disruptions/{id}/rebook` | `IrropsRebookingErrorRateHigh` | `docs/runbooks/IrropsRebookingErrorRateHigh.md` | `docs/demo/S2-rebooking-error-spike.md` |
 | S3 | Notification backlog — queue grows, workers saturate, DLQ fills | `POST /api/notifications/queue/saturate {"enabled":true,"burst":200}` (or the UI button) | `NotificationQueueBacklogGrowing`, `NotificationDLQGrowing` | `docs/runbooks/NotificationQueueBacklogGrowing.md` | `docs/demo/S3-notification-backlog.md` |
+| **S4** | **Login failures after a release** — a cohort of customers and all staff get 500s on sign-in, loyalty members are unaffected | feature flag: restart the API with `IBERIA_AUTH_SESSION_V2=1`, then drive traffic to `POST /api/auth/login` | `AuthLoginErrorRateHigh` | `docs/runbooks/AuthLoginErrorRateHigh.md` | `docs/demo/S4-login-failures.md` |
+
+**S4 is the default for a digital-channel audience**: it is a partial outage on the front door of
+the website and app, so capacity/database signals stay green and the triage has to reason about
+*which cohort* is failing and *what they have in common*. It anchors directly on MTTR (detect →
+triage → flag flip) and change failure rate (the release shipped without a test for the
+null-loyalty cohort).
 
 Suggested beats (S1 as the default):
 
@@ -69,10 +76,22 @@ Full step-by-step (with expected numbers) in `docs/demo/incident-triage-walkthro
 ## 3. Security track (20 min)
 
 **Security → Posture** (`/security/posture`) reads the register straight from
-`docs/vulnerabilities/` — **37 documented, reachable findings**: 13 critical, 18 high, 6 medium,
-spanning A01 Broken Access Control (13), A05 Misconfiguration (5), A03 Injection (4),
-A02 Cryptographic Failures, A04 Insecure Design, A07 Auth Failures, A08 Integrity Failures,
-A09 Logging Failures, A10 SSRF.
+`docs/vulnerabilities/` — **42 documented, reachable findings**: 13 critical, 19 high, 6 medium,
+4 low, spanning A01 Broken Access Control (13), A05 Misconfiguration, A03 Injection,
+A02 Cryptographic Failures, A04 Insecure Design, A06 Vulnerable Components, A07 Auth Failures,
+A08 Integrity Failures, A09 Logging Failures, A10 SSRF.
+
+### 3a. CVE / dependency remediation (the highest-volume use case)
+
+```bash
+./scripts/audit.sh    # pip-audit + npm audit across the monorepo
+```
+
+~29 Python advisories across 4 packages and ~22 npm advisories, anchored on two planted
+findings: VULN-152 (`urllib3==1.26.4`, CVE-2021-33503) and VULN-165 (`axios@0.21.0`,
+`lodash@4.17.15`, `js-yaml@3.13.1`). The loop to show is scan → triage reachability → scoped PR
+per package group → tests green → register updated → CI gate so it cannot regress, then the same
+loop fanned out one session per repository. Full script: `docs/demo/CVE-REMEDIATION.md`.
 
 `docs/VULNERABILITIES.md` is the generated answer key (regenerate with
 `python scripts/generate_vuln_index.py`); each `docs/vulnerabilities/VULN-*.md` gives the exact

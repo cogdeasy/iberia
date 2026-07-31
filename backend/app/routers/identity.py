@@ -7,6 +7,7 @@ They are intentional and documented under ``docs/vulnerabilities/``; do not "fix
 """
 
 import logging
+import os
 import secrets
 from datetime import datetime, timedelta, timezone
 
@@ -52,6 +53,21 @@ LONG_LIVED_TTL = timedelta(days=30)
 
 _identity_bearer = HTTPBearer(auto_error=False)
 
+# SRE demo scenario S4 — "login failures after a release". With IBERIA_AUTH_SESSION_V2=1 the
+# login path writes to the v2 session cache, which is keyed by the Iberia Plus number. Accounts
+# created before the loyalty migration have none, so those logins raise and return 500.
+AUTH_SESSION_V2_FLAG = "IBERIA_AUTH_SESSION_V2"
+_SESSION_CACHE_V2: dict[str, dict[str, str]] = {}
+
+
+def session_cache_v2_enabled() -> bool:
+    return os.getenv(AUTH_SESSION_V2_FLAG, "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _store_session_v2(user: User) -> None:
+    key = user.iberia_plus_number.upper()
+    _SESSION_CACHE_V2[key] = {"email": user.email, "role": user.role}
+
 
 def _issue_token(user: User) -> str:
     expires = datetime.now(tz=timezone.utc) + LONG_LIVED_TTL
@@ -96,6 +112,8 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse
         raise HTTPException(status.HTTP_404_NOT_FOUND, "No account registered with that email")
     if not verify_password(payload.password, user.password_hash):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Incorrect password")
+    if session_cache_v2_enabled():
+        _store_session_v2(user)
     record_domain_event("identity", "login")
     log_event(logger, logging.INFO, "login success", email=user.email, role=user.role)
     return TokenResponse(access_token=_issue_token(user), user=UserOut.model_validate(user))

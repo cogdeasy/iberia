@@ -1,0 +1,43 @@
+groups:
+  - name: identity
+    rules:
+      - alert: AuthLoginErrorRateHigh
+        expr: |
+          (
+            sum(rate(iberia_http_requests_total{status="500",route="/api/auth/login"}[5m]))
+            /
+            clamp_min(sum(rate(iberia_http_requests_total{route="/api/auth/login"}[5m])), 0.001)
+          ) > 0.05
+        for: 2m
+        labels:
+          severity: sev1
+          service: identity
+          domain: identity
+          team: digital-channels
+        annotations:
+          summary: "Customer login is failing ({{ $value | humanizePercentage }} of attempts return 5xx)"
+          description: >-
+            More than 5% of POST /api/auth/login requests have returned HTTP 500 for 2 minutes.
+            Customers and staff cannot sign in to iberia.com or the app; check-in, booking
+            management and the contact-centre desktop are all blocked behind this endpoint.
+          runbook: docs/runbooks/AuthLoginErrorRateHigh.md
+          demo_scenario: docs/demo/S4-login-failures.md
+          dashboard: ops/grafana/platform.json
+
+      - alert: AuthLoginSuccessRateDropped
+        expr: |
+          sum(rate(iberia_domain_events_total{domain="identity",event="login"}[10m])) == 0
+          and
+          sum(rate(iberia_http_requests_total{route="/api/auth/login"}[10m])) > 0
+        for: 5m
+        labels:
+          severity: sev2
+          service: identity
+          domain: identity
+          team: digital-channels
+        annotations:
+          summary: "Login attempts are arriving but no session has been issued for 10 minutes"
+          description: >-
+            The identity domain has emitted no `login` events while traffic continues to hit
+            /api/auth/login — every sign-in is failing, silently or with an error.
+          runbook: docs/runbooks/AuthLoginErrorRateHigh.md

@@ -11,7 +11,7 @@ Severity legend: Critical > High > Medium > Low. `Location` is the sink, as reco
 workstream that planted the finding.
 
 
-**41 findings** — Critical: 13 · High: 18 · Medium: 6 · Low: 4
+**42 findings** — Critical: 13 · High: 19 · Medium: 6 · Low: 4
 
 | ID | Title | Domain | Severity | CWE | OWASP | Location | Detail |
 |----|-------|--------|----------|-----|-------|----------|--------|
@@ -42,6 +42,7 @@ workstream that planted the finding.
 | VULN-140 | Missing function-level authorisation on the audit trail | security | High | CWE-285 (Improper Authorization) | A01:2021 – Broken Access Control | `backend/app/routers/security.py:28` | [detail](vulnerabilities/VULN-140-audit-trail-missing-function-level-authz.md) |
 | VULN-150 | Permissive CORS reflects any origin with credentials allowed | platform | High | CWE-942 (Permissive Cross-domain Policy with Untrusted Domains) | A05:2021 – Security Misconfiguration | `.env.example:44 (documented demo profile), backend/app/core/config.py:15-19` | [detail](vulnerabilities/VULN-150-permissive-cors.md) |
 | VULN-154 | Backend container runs as root with `--reload`/debug and a debugger port exposed | platform | High | CWE-250 (Execution with Unnecessary Privileges) / CWE-489 (Active Debug Code) | A05:2021 – Security Misconfiguration | `ops/Dockerfile.backend:14-38` | [detail](vulnerabilities/VULN-154-docker-misconfiguration.md) |
+| VULN-165 | Vulnerable npm dependencies pinned in the frontend | platform | High | CWE-1395 (Dependency on Vulnerable Third-Party Component) / CWE-937 | A06:2021 – Vulnerable and Outdated Components | `frontend/package.json (axios@0.21.0, lodash@4.17.15, js-yaml@3.13.1), frontend/package-lock.json` | [detail](vulnerabilities/VULN-165-vulnerable-npm-dependencies.md) |
 | VULN-170 | Reflected XSS in the support message preview (`dangerouslySetInnerHTML`) | frontend / platform support console | High | CWE-79 (Improper Neutralization of Input During Web Page Generation) | A03:2021 – Injection | `frontend/src/pages/support.page.tsx:194-198 (sink), backend/app/routers/platform_support.py:71-81 (echo)` | [detail](vulnerabilities/VULN-170-reflected-xss-support-preview.md) |
 | VULN-171 | Session JWT kept in `localStorage` and leaked into the URL by "share this page" | frontend / platform support console | High | CWE-598 (Use of GET Request Method With Sensitive Query Strings) / CWE-522 (Insufficiently Protected Credentials) | A02:2021 – Cryptographic Failures (with A07 session-handling impact) | `frontend/src/lib/share.ts:15-24, frontend/src/pages/support.page.tsx:121-127 (trigger), frontend/src/lib/api.ts:1-25 (localStorage store)` | [detail](vulnerabilities/VULN-171-jwt-in-url-and-localstorage.md) |
 | VULN-172 | Client-side-only authorisation on the operations broadcast panel | frontend / platform support console | High | CWE-602 (Client-Side Enforcement of Server-Side Security) / CWE-862 (Missing Authorization) | A01:2021 – Broken Access Control | `backend/app/routers/platform_support.py:85-117 (no role dependency), frontend/src/pages/support.page.tsx:52 + :210-212 (CSS/role gate)` | [detail](vulnerabilities/VULN-172-client-side-only-authorisation.md) |
