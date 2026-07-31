@@ -917,13 +917,6 @@ a.search-tab:hover {
   cursor: not-allowed;
 }
 
-.seat.is-selected {
-  background: var(--ib-red);
-  border-color: var(--ib-red);
-  color: #fff;
-  font-weight: 700;
-}
-
 .seat-aisle {
   width: 20px;
 }

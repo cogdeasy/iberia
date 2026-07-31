@@ -5,6 +5,8 @@ import { clearSession, getUser, type SessionUser } from '../lib/api'
 import Logo from './Logo'
 
 const STAFF_SECTIONS: PageSection[] = ['ops', 'security']
+/** Applied to staff pages that declare no roles of their own, so the strip never leaks to customers. */
+const STAFF_ROLES = ['agent', 'ops', 'sre', 'admin']
 
 function initials(name: string): string {
   return name
@@ -86,7 +88,10 @@ export default function AppShell({
   )
   const staffGroups = STAFF_SECTIONS.map((section) => ({
     section,
-    items: pages.filter((page) => page.section === section && page.title && visible(page.roles)),
+    items: pages.filter(
+      (page) =>
+        page.section === section && page.title && visible(page.roles?.length ? page.roles : STAFF_ROLES),
+    ),
   })).filter((group) => group.items.length > 0)
   const isHome = location.pathname === '/'
 
