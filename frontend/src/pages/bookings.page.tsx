@@ -211,18 +211,20 @@ export default function BookingsPage() {
                 {booking.passengers.length > 1 ? 's' : ''}
               </div>
               <div className="stack" style={{ justifyContent: 'flex-end' }}>
-                {booking.payment_status !== 'paid' && (
-                  <Link className="btn sm" to={`/checkout/${booking.pnr}`}>
-                    Pay now
-                  </Link>
-                )}
-                <button className="btn ghost sm" onClick={() => openSeatmap(booking)}>
-                  {seatmapFor === booking.pnr ? 'Hide seats' : 'Choose seats'}
-                </button>
                 {booking.status !== 'cancelled' && (
-                  <button className="btn ghost sm" onClick={() => cancel(booking.pnr)}>
-                    Cancel
-                  </button>
+                  <>
+                    {booking.payment_status !== 'paid' && (
+                      <Link className="btn sm" to={`/checkout/${booking.pnr}`}>
+                        Pay now
+                      </Link>
+                    )}
+                    <button className="btn ghost sm" onClick={() => openSeatmap(booking)}>
+                      {seatmapFor === booking.pnr ? 'Hide seats' : 'Choose seats'}
+                    </button>
+                    <button className="btn ghost sm" onClick={() => cancel(booking.pnr)}>
+                      Cancel
+                    </button>
+                  </>
                 )}
               </div>
             </div>
@@ -278,10 +280,6 @@ export default function BookingsPage() {
                 <span>
                   <i style={{ background: 'var(--line)' }} />
                   Occupied
-                </span>
-                <span>
-                  <i style={{ background: 'var(--ib-red)', borderColor: 'var(--ib-red)' }} />
-                  Selected
                 </span>
               </div>
             </div>

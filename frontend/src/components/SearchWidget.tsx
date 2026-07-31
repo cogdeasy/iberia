@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../lib/api'
 
@@ -56,14 +56,29 @@ export default function SearchWidget({
   busy = false,
 }: SearchWidgetProps) {
   const [airports, setAirports] = useState<Airport[]>([])
-  const [criteria, setCriteria] = useState<SearchCriteria>({
-    origin: initial?.origin ?? 'MAD',
-    destination: initial?.destination ?? 'BCN',
-    date: initial?.date ?? '',
-    passengers: initial?.passengers ?? 1,
-    cabin: initial?.cabin ?? 'economy',
-    sort: initial?.sort ?? 'departure',
-  })
+  const initialCriteria = useMemo<SearchCriteria>(
+    () => ({
+      origin: initial?.origin ?? 'MAD',
+      destination: initial?.destination ?? 'BCN',
+      date: initial?.date ?? '',
+      passengers: initial?.passengers ?? 1,
+      cabin: initial?.cabin ?? 'economy',
+      sort: initial?.sort ?? 'departure',
+    }),
+    [
+      initial?.origin,
+      initial?.destination,
+      initial?.date,
+      initial?.passengers,
+      initial?.cabin,
+      initial?.sort,
+    ],
+  )
+  const [criteria, setCriteria] = useState<SearchCriteria>(initialCriteria)
+
+  useEffect(() => {
+    setCriteria(initialCriteria)
+  }, [initialCriteria])
 
   useEffect(() => {
     api<Airport[]>('/api/flights/airports')

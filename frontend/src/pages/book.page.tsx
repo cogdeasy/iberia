@@ -52,15 +52,24 @@ const emptyPassenger = (): PassengerForm => ({
 
 const cabinLabel = (cabin: string) => cabin.replace('_', ' ')
 
+function readCabin(value: string | null): string {
+  return value && CABINS.includes(value) ? value : 'economy'
+}
+
+function readPassengerCount(value: string | null): number {
+  const count = Number(value)
+  return Number.isFinite(count) ? Math.min(9, Math.max(1, Math.trunc(count))) : 1
+}
+
 export default function BookPage() {
   const { flightId } = useParams<{ flightId: string }>()
   const [params] = useSearchParams()
   const navigate = useNavigate()
   const user = getUser()
   const [flight, setFlight] = useState<FlightOffer | null>(null)
-  const [cabin, setCabin] = useState(params.get('cabin') ?? 'economy')
+  const [cabin, setCabin] = useState(readCabin(params.get('cabin')))
   const [passengers, setPassengers] = useState<PassengerForm[]>(
-    Array.from({ length: Math.max(1, Number(params.get('passengers') ?? 1)) }, emptyPassenger),
+    Array.from({ length: readPassengerCount(params.get('passengers')) }, emptyPassenger),
   )
   const [contactEmail, setContactEmail] = useState(user?.email ?? '')
   const [error, setError] = useState<string | null>(null)

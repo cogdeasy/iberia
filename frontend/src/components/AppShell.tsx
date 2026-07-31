@@ -142,7 +142,10 @@ export default function AppShell({
         </div>
       </nav>
 
-      <main className={isHome ? 'content flush' : 'content'} key={location.pathname}>
+      <main
+        className={isHome ? 'content flush' : 'content'}
+        key={`${location.pathname}:${user?.email ?? 'anonymous'}`}
+      >
         {children}
       </main>
 
