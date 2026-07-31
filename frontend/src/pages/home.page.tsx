@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import type { PageMeta } from '../lib/pages'
 import { api, getUser } from '../lib/api'
@@ -77,10 +77,9 @@ export default function HomePage() {
       .catch(() => setFares({}))
   }, [])
 
-  const greeting = useMemo(() => {
-    if (!user) return 'Where would you like to fly?'
-    return `Welcome back, ${user.full_name.split(' ')[0]}.`
-  }, [user])
+  const greeting = user
+    ? `Welcome back, ${user.full_name.split(' ')[0]}.`
+    : 'Where would you like to fly?'
 
   return (
     <>

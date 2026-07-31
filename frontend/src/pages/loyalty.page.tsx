@@ -70,7 +70,11 @@ export default function LoyaltyPage() {
   const [busy, setBusy] = useState(false)
 
   const load = useCallback(() => {
-    if (!signedIn) return
+    if (!signedIn) {
+      setMember(null)
+      setError(null)
+      return
+    }
     api<Member>('/api/loyalty/me')
       .then((data) => {
         setMember(data)
