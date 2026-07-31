@@ -57,15 +57,19 @@ export default function CheckoutPage() {
   const [cvv, setCvv] = useState('')
   const [payment, setPayment] = useState<Payment | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
   useEffect(() => {
     if (!pnr) return
     api<Booking>(`/api/bookings/${pnr}`)
-      .then(setBooking)
+      .then((loaded) => {
+        setBooking(loaded)
+        setLoadError(null)
+      })
       .catch((err: Error) => {
         setBooking(null)
-        setError(err.message)
+        setLoadError(err.message)
       })
   }, [pnr])
 
@@ -324,8 +328,8 @@ export default function CheckoutPage() {
               </>
             ) : (
               <p className="muted">
-                {error
-                  ? `Booking ${pnr} could not be loaded — sign in or check the reference.`
+                {loadError
+                  ? `Booking ${pnr} could not be loaded (${loadError}) — sign in or check the reference.`
                   : `Loading booking ${pnr}…`}
               </p>
             )}

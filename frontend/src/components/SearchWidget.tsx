@@ -46,6 +46,14 @@ export function criteriaToParams(criteria: SearchCriteria): URLSearchParams {
   return params
 }
 
+/** Cabins the booking backend prices; the widget itself only sells the first three. */
+export const BOOKABLE_CABINS = ['economy', 'premium_economy', 'business', 'first']
+
+/** Falls back to economy for a missing or unknown query-string cabin. */
+export function readCabin(value: string | null): string {
+  return value && BOOKABLE_CABINS.includes(value) ? value : 'economy'
+}
+
 /** Clamps a query-string passenger count to the 1–9 range the widget offers. */
 export function readPassengerCount(value: string | null): number {
   const count = Number(value)

@@ -82,7 +82,9 @@ export default function AppShell({
   }, [location.pathname])
 
   const visible = (roles?: string[]) => !roles?.length || (user && roles.includes(user.role))
-  const primary = pages.filter((page) => page.nav === 'primary' && page.title)
+  const primary = pages.filter(
+    (page) => page.nav === 'primary' && page.title && visible(page.roles),
+  )
   const staff = user && STAFF_ROLES.includes(user.role)
   const isHome = location.pathname === '/'
 

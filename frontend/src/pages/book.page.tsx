@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import type { PageMeta } from '../lib/pages'
 import { api, getUser } from '../lib/api'
 import Steps from '../components/Steps'
-import { readPassengerCount } from '../components/SearchWidget'
+import { BOOKABLE_CABINS, readCabin, readPassengerCount } from '../components/SearchWidget'
 
 export const meta: PageMeta = { path: '/book/:flightId', section: 'customer', nav: 'none', order: 21 }
 
@@ -36,7 +36,7 @@ interface PassengerForm {
   document_number: string
 }
 
-const CABINS = ['economy', 'premium_economy', 'business', 'first']
+const MAX_PASSENGERS = 9
 const CABIN_MULTIPLIER: Record<string, number> = {
   economy: 1,
   premium_economy: 1.6,
@@ -52,10 +52,6 @@ const emptyPassenger = (): PassengerForm => ({
 })
 
 const cabinLabel = (cabin: string) => cabin.replace('_', ' ')
-
-function readCabin(value: string | null): string {
-  return value && CABINS.includes(value) ? value : 'economy'
-}
 
 export default function BookPage() {
   const { flightId } = useParams<{ flightId: string }>()
@@ -194,7 +190,12 @@ export default function BookPage() {
               <button
                 type="button"
                 className="btn ghost sm"
-                onClick={() => setPassengers((c) => [...c, emptyPassenger()])}
+                disabled={passengers.length >= MAX_PASSENGERS}
+                onClick={() =>
+                  setPassengers((c) =>
+                    c.length >= MAX_PASSENGERS ? c : [...c, emptyPassenger()],
+                  )
+                }
               >
                 + Add passenger
               </button>
@@ -214,7 +215,7 @@ export default function BookPage() {
               <div className="field">
                 <label htmlFor="cabin">Cabin</label>
                 <select id="cabin" value={cabin} onChange={(e) => setCabin(e.target.value)}>
-                  {CABINS.map((option) => (
+                  {BOOKABLE_CABINS.map((option) => (
                     <option key={option} value={option}>
                       {cabinLabel(option)}
                     </option>

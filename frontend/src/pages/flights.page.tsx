@@ -4,6 +4,7 @@ import type { PageMeta } from '../lib/pages'
 import { api } from '../lib/api'
 import SearchWidget, {
   CABINS,
+  readCabin,
   readPassengerCount,
   type SearchCriteria,
 } from '../components/SearchWidget'
@@ -74,7 +75,7 @@ export default function FlightsPage() {
       destination: params.get('destination') ?? 'BCN',
       date: params.get('date') ?? '',
       passengers: readPassengerCount(params.get('passengers')),
-      cabin: params.get('cabin') ?? 'economy',
+      cabin: readCabin(params.get('cabin')),
       sort: params.get('sort') ?? 'departure',
     }),
     [params],
@@ -143,7 +144,7 @@ export default function FlightsPage() {
                 onChange={(event) => {
                   const next = new URLSearchParams(params)
                   next.set('sort', event.target.value)
-                  setParams(next)
+                  setParams(next, { replace: true })
                 }}
               >
                 {SORTS.map((sort) => (
