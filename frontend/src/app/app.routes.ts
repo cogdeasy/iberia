@@ -85,7 +85,9 @@ export const PAGES: PageMeta[] = [
 export const NAV_PAGES: PageMeta[] = sortPages(PAGES);
 
 function rolesOf(path: string): string[] {
-  return PAGES.find((page) => page.path === path)?.roles ?? [];
+  const page = PAGES.find((entry) => entry.path === path);
+  if (!page) throw new Error(`No PAGES entry for route ${path}`);
+  return page.roles ?? [];
 }
 
 function guarded(path: string) {

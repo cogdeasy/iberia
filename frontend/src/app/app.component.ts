@@ -40,7 +40,12 @@ interface NavGroup {
           <div class="nav-group">
             <span class="nav-group-label">{{ group.label }}</span>
             @for (page of group.items; track page.path) {
-              <a [routerLink]="page.path" routerLinkActive="active" class="nav-link">
+              <a
+                [routerLink]="page.path"
+                routerLinkActive="active"
+                [routerLinkActiveOptions]="{ exact: page.path === '/' }"
+                class="nav-link"
+              >
                 {{ page.title }}
               </a>
             }
