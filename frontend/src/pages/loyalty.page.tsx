@@ -8,7 +8,8 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import { api } from '../lib/api'
+import { Link } from 'react-router-dom'
+import { api, getUser } from '../lib/api'
 import type { PageMeta } from '../lib/pages'
 
 export const meta: PageMeta = {
@@ -60,6 +61,7 @@ function nextTier(tierPoints: number): string {
 }
 
 export default function LoyaltyPage() {
+  const signedIn = Boolean(getUser())
   const [member, setMember] = useState<Member | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
@@ -68,13 +70,14 @@ export default function LoyaltyPage() {
   const [busy, setBusy] = useState(false)
 
   const load = useCallback(() => {
+    if (!signedIn) return
     api<Member>('/api/loyalty/me')
       .then((data) => {
         setMember(data)
         setError(null)
       })
       .catch((err: Error) => setError(err.message))
-  }, [])
+  }, [signedIn])
 
   useEffect(load, [load])
 
@@ -121,6 +124,19 @@ export default function LoyaltyPage() {
 
       {error && <div className="error">{error}</div>}
       {notice && <div className="notice">{notice}</div>}
+
+      {!signedIn && (
+        <div className="card empty">
+          <h3>Join Iberia Plus</h3>
+          <p>
+            Earn Avios on every Iberia flight, climb from Clásica to Platino and spend your Avios on
+            flights, upgrades and seats. Membership is free.
+          </p>
+          <Link className="btn" to="/login">
+            Sign in or join
+          </Link>
+        </div>
+      )}
 
       {member && (
         <>
