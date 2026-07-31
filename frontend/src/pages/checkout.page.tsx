@@ -271,7 +271,7 @@ export default function CheckoutPage() {
                   />
                 </div>
               </div>
-              <button className="btn" type="submit" disabled={busy || !pnr}>
+              <button className="btn" type="submit" disabled={busy || !pnr || !booking}>
                 {busy ? 'Authorising…' : `Pay ${booking ? `€${booking.total_eur.toFixed(2)}` : 'now'}`}
               </button>
             </form>

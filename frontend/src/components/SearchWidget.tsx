@@ -71,6 +71,7 @@ export default function SearchWidget({
   busy = false,
 }: SearchWidgetProps) {
   const [airports, setAirports] = useState<Airport[]>([])
+  const [airportsError, setAirportsError] = useState<string | null>(null)
   const sort = initial?.sort ?? 'departure'
   /** Sort is owned by the results page, so it is excluded here: re-seeding on a sort
    * change would wipe itinerary edits the traveller has typed but not yet submitted. */
@@ -94,8 +95,14 @@ export default function SearchWidget({
 
   useEffect(() => {
     api<Airport[]>('/api/flights/airports')
-      .then(setAirports)
-      .catch(() => setAirports([]))
+      .then((loaded) => {
+        setAirports(loaded)
+        setAirportsError(null)
+      })
+      .catch((err: Error) => {
+        setAirports([])
+        setAirportsError(err.message)
+      })
   }, [])
 
   const set = <K extends keyof SearchCriteria>(key: K, value: SearchCriteria[K]) =>
@@ -129,6 +136,11 @@ export default function SearchWidget({
           <Link className="search-tab" to="/bookings">
             My trips
           </Link>
+        </div>
+      )}
+      {airportsError && (
+        <div className="notice">
+          Airport list unavailable ({airportsError}). Only your current route can be searched.
         </div>
       )}
       <div className="search-row">

@@ -74,6 +74,8 @@ export default function FlightsPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [directOnly, setDirectOnly] = useState(false)
+  /** Bumped on every explicit submit so re-running an unchanged search still refetches. */
+  const [attempt, setAttempt] = useState(0)
 
   const criteria = useMemo<SearchCriteria>(
     () => ({
@@ -106,7 +108,8 @@ export default function FlightsPage() {
         setData(null)
       })
       .finally(() => setLoading(false))
-  }, [criteria])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [criteria, attempt])
 
   useEffect(() => {
     search()
@@ -133,7 +136,10 @@ export default function FlightsPage() {
       <SearchWidget
         initial={criteria}
         busy={loading}
-        onSearch={(next) => setParams(next)}
+        onSearch={(next) => {
+          setParams(next)
+          setAttempt((value) => value + 1)
+        }}
       />
 
       {error && <div className="error">{error}</div>}
