@@ -84,8 +84,10 @@ export default function AppShell({
   }, [location.pathname])
 
   const visible = (roles?: string[]) => !roles?.length || (user && roles.includes(user.role))
+  /** Titled customer pages are linked by default; `nav: 'none'` opts a page out. */
   const primary = pages.filter(
-    (page) => page.nav === 'primary' && page.title && visible(page.roles),
+    (page) =>
+      page.section === 'customer' && page.nav !== 'none' && page.title && visible(page.roles),
   )
   const staffGroups = STAFF_SECTIONS.map((section) => ({
     section,
