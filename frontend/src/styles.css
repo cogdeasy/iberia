@@ -36,32 +36,44 @@ body {
   align-items: center;
   gap: 24px;
   padding: 12px 24px;
-  background: var(--surface);
-  border-bottom: 3px solid var(--ib-red);
+  background: var(--ib-red);
+  border-bottom: 3px solid var(--ib-gold);
   box-shadow: var(--shadow);
   flex-wrap: wrap;
 }
 
-.brand-mark {
-  font-weight: 800;
-  letter-spacing: 3px;
-  color: var(--ib-red);
-  font-size: 20px;
+.session .btn.ghost {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.55);
+}
+
+.session .btn.ghost:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  text-decoration: none;
 }
 
 .brand-sub {
-  display: block;
   font-size: 11px;
-  color: var(--muted);
+  color: rgba(255, 255, 255, 0.85);
   letter-spacing: 1px;
   text-transform: uppercase;
 }
 
-.nav {
+.navbar {
   display: flex;
   gap: 20px;
-  flex: 1;
   flex-wrap: wrap;
+  align-items: center;
+  padding: 8px 24px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  box-shadow: var(--shadow);
 }
 
 .nav-group {
@@ -101,11 +113,24 @@ body {
   align-items: center;
   gap: 10px;
   font-size: 13px;
+  margin-left: auto;
+  color: #fff;
 }
 
 .session-user em {
-  color: var(--muted);
+  color: rgba(255, 255, 255, 0.8);
   font-style: normal;
+  text-transform: capitalize;
+}
+
+.btn.light {
+  background: #fff;
+  color: var(--ib-red);
+  font-weight: 600;
+}
+
+.btn.light:hover {
+  background: #f2f3f5;
 }
 
 .content {
