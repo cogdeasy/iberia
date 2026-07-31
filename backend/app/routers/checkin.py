@@ -3,7 +3,7 @@
 Planted (intentional, documented) weaknesses in this module:
   * VULN-071 — IDOR on ``GET /api/checkin/{pnr}/boarding-pass/{passenger_id}``
   * VULN-072 — passport / travel-document numbers in responses and log lines
-See ``docs/vulnerabilities/VULN-071..072-*.md``.
+See ``docs/vulnerabilities/VULN-07*-*.md``.
 """
 
 import logging
