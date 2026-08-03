@@ -3,10 +3,10 @@ uvicorn[standard]==0.34.0
 sqlalchemy==2.0.36
 pydantic==2.10.4
 pydantic-settings==2.7.0
-pyjwt==2.10.1
+pyjwt==2.13.0
 passlib[bcrypt]==1.7.4
 bcrypt==4.0.1
-python-multipart==0.0.20
+python-multipart==0.0.32
 prometheus-client==0.21.1
 httpx==0.28.1
 # NOTE(demo): planted VULN-152 — legacy pin carried over from the ib-app-prod-02 estate.
