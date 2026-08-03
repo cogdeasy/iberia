@@ -8,11 +8,26 @@
 | OWASP Top 10 (2021) | A06:2021 – Vulnerable and Outdated Components |
 | Severity | High |
 | Location | `frontend/package.json` (`axios@0.21.0`, `lodash@4.17.15`, `js-yaml@3.13.1`), `frontend/package-lock.json` |
+| Status | remediated |
 | Introduced by | CVE-remediation demo track |
+
+## Remediation status
+
+**Remediated** — all three pins now sit on patched releases:
+
+| Package | Was | Now | Note |
+|---------|-----|-----|------|
+| `axios` | 0.21.0 | 1.18.1 | Major bump; no call sites to migrate (the app uses `fetch` in `src/lib/api.ts`) |
+| `lodash` | 4.17.15 | ^4.18.1 | In-major |
+| `js-yaml` | 3.13.1 | 3.15.0 | The v3 line was patched, so the `safeLoad` → `load` migration to js-yaml 4 was not required |
+
+Residual frontend advisories after remediation are unrelated to this finding: `react-router`
+(fix only in the v7 major) and `esbuild` via `vite` (dev-server only, fix only in the vite 6+
+major). The history below is kept as the demo narrative.
 
 ## Description
 
-The frontend pins three long-outdated packages, mirroring the "legacy pin carried over from an
+The frontend pinned three long-outdated packages, mirroring the "legacy pin carried over from an
 older estate" pattern that VULN-152 covers on the Python side:
 
 | Package | Pinned | Notable advisory | Fixed in |
@@ -26,6 +41,8 @@ though no module imports them yet. That is exactly the real-world shape of depen
 risk is in the manifest and the build, not in a line of application code.
 
 ## Reproduction
+
+Against the pre-remediation pins:
 
 ```bash
 cd frontend && npm audit
