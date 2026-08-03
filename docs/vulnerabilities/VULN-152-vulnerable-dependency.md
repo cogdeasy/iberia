@@ -7,12 +7,21 @@
 | CWE | CWE-1104 (Use of Unmaintained Third Party Components) |
 | OWASP Top 10 (2021) | A06:2021 – Vulnerable and Outdated Components |
 | Severity | Medium |
-| Location | `backend/requirements.txt:12-15` |
+| Location | `backend/requirements.txt:12-14` |
+| Status | remediated |
 | Introduced by | Workstream 12 — platform (`devin/iberia-platform`) |
+
+## Remediation status
+
+**Remediated** — `urllib3` is pinned to `2.7.0`, which clears all nine advisories the weekly SCA
+sweep reported for 1.26.4 (`PYSEC-2021-108`/CVE-2021-33503, `PYSEC-2023-192`, `PYSEC-2023-212`,
+`PYSEC-2026-141`, `PYSEC-2026-1994`/`-1995`/`-1996`/`-1998`/`-1999`). 1.26.20 would have closed
+only four of them: the redirect, chained-`Content-Encoding` and streaming-API fixes exist on the
+2.x line only. The history below is kept as the demo narrative.
 
 ## Description
 
-`backend/requirements.txt` pins `urllib3==1.26.4`, a legacy pin carried over from the retired
+`backend/requirements.txt` pinned `urllib3==1.26.4`, a legacy pin carried over from the retired
 `ib-app-prod-02` estate (see `ops/legacy/deploy_notes.md`). That release is affected by:
 
 * **CVE-2021-33503** (CVSS 7.5, high) — denial of service via catastrophic backtracking when
@@ -24,6 +33,8 @@ exactly the kind of stale transitive-style pin an SCA scan flags, and the remedi
 one-line bump.
 
 ## Reproduction
+
+Against the pre-remediation pin (`urllib3==1.26.4`):
 
 ```bash
 # the vulnerable version is what actually gets installed
