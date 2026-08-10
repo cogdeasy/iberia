@@ -19,11 +19,13 @@
 |---------|-----|-----|------|
 | `axios` | 0.21.0 | 1.18.1 | Major bump; no call sites to migrate (the app uses `fetch` in `src/lib/api.ts`) |
 | `lodash` | 4.17.15 | ^4.18.1 | In-major |
-| `js-yaml` | 3.13.1 | 3.15.0 | The v3 line was patched, so the `safeLoad` → `load` migration to js-yaml 4 was not required |
+| `js-yaml` | 3.13.1 | 3.15.1 | The v3 line was patched, so the `safeLoad` → `load` migration to js-yaml 4 was not required |
+
+`js-yaml` was first moved to 3.15.0; GHSA-5p4m-2wfm-xmqj (quadratic CPU consumption in `!!omap`
+resolution) subsequently landed against that release and is fixed in 3.15.1, still in-major.
 
 Residual frontend advisories after remediation are unrelated to this finding: `react-router`
-(fix only in the v7 major) and `esbuild` via `vite` (dev-server only, fix only in the vite 6+
-major). The history below is kept as the demo narrative.
+(fix only in the v7 major). The history below is kept as the demo narrative.
 
 ## Description
 
