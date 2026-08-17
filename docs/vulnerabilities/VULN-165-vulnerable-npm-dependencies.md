@@ -24,6 +24,10 @@
 `js-yaml` was first moved to 3.15.0; GHSA-5p4m-2wfm-xmqj (quadratic CPU consumption in `!!omap`
 resolution) subsequently landed against that release and is fixed in 3.15.1, still in-major.
 
+A transitive advisory against `nanoid` (dev-only, pulled in by `postcss` via `vite`) was cleared
+in the lockfile at the same time: GHSA-2v37-7h3g-55p8 (infinite loop in custom generators when
+`size` is zero) affects `nanoid < 3.3.18`, so the lockfile now resolves `nanoid@3.3.18`.
+
 Residual frontend advisories after remediation are unrelated to this finding: `react-router`
 (fix only in the v7 major). The history below is kept as the demo narrative.
 
