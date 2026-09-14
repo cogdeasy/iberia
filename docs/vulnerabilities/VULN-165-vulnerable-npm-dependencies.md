@@ -19,10 +19,13 @@
 |---------|-----|-----|------|
 | `axios` | 0.21.0 | 1.18.1 | Major bump; no call sites to migrate (the app uses `fetch` in `src/lib/api.ts`) |
 | `lodash` | 4.17.15 | ^4.18.1 | In-major |
-| `js-yaml` | 3.13.1 | 3.15.1 | The v3 line was patched, so the `safeLoad` → `load` migration to js-yaml 4 was not required |
+| `js-yaml` | 3.13.1 | 3.15.2 | The v3 line was patched, so the `safeLoad` → `load` migration to js-yaml 4 was not required |
 
 `js-yaml` was first moved to 3.15.0; GHSA-5p4m-2wfm-xmqj (quadratic CPU consumption in `!!omap`
 resolution) subsequently landed against that release and is fixed in 3.15.1, still in-major.
+GHSA-2883-xcg3-v3hh / CVE-2026-84375 (`maxTotalMergeKeys` does not bound CPU use for empty
+merge sources) then landed against 3.15.1 and is fixed in 3.15.2; the dev-only `js-yaml@4`
+copies pulled in by `eslint` were moved to 4.3.2 in the lockfile at the same time.
 
 A transitive advisory against `nanoid` (dev-only, pulled in by `postcss` via `vite`) was cleared
 in the lockfile at the same time: GHSA-2v37-7h3g-55p8 (infinite loop in custom generators when
