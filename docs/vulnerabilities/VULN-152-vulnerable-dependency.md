@@ -13,11 +13,16 @@
 
 ## Remediation status
 
-**Remediated** — `urllib3` is pinned to `2.7.0`, which clears all nine advisories the weekly SCA
+**Remediated** — `urllib3` is first moved to `2.7.0`, which clears all nine advisories the weekly SCA
 sweep reported for 1.26.4 (`PYSEC-2021-108`/CVE-2021-33503, `PYSEC-2023-192`, `PYSEC-2023-212`,
 `PYSEC-2026-141`, `PYSEC-2026-1994`/`-1995`/`-1996`/`-1998`/`-1999`). 1.26.20 would have closed
 only four of them: the redirect, chained-`Content-Encoding` and streaming-API fixes exist on the
-2.x line only. The history below is kept as the demo narrative.
+2.x line only.
+
+Three further advisories then landed against 2.7.0 (GHSA-vxq7-64xx-v4gw / CVE-2026-97689 unbounded
+chunk-size line in `read_chunked()`, GHSA-gh4c-6fx4-qh6g / CVE-2026-97688 chunked-deflate infinite
+loop, GHSA-8988-9cw3-xx77 / CVE-2026-97687 HTTPS-proxy TLS config ignored), all fixed in `2.8.0`,
+so the pin now sits on `urllib3==2.8.0`. The history below is kept as the demo narrative.
 
 ## Description
 

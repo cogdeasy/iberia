@@ -5,7 +5,7 @@ uvicorn[standard]==0.34.0
 sqlalchemy==2.0.36
 pydantic==2.10.4
 pydantic-settings==2.7.0
-pyjwt==2.13.0
+pyjwt==2.15.1
 passlib[bcrypt]==1.7.4
 bcrypt==4.0.1
 python-multipart==0.0.32
@@ -13,4 +13,4 @@ prometheus-client==0.21.1
 httpx==0.28.1
 # VULN-152 remediated: the legacy ib-app-prod-02 pin (urllib3 1.26.4) is retired.
 # Kept as an explicit pin so an SCA gate has something to assert against; nothing imports it.
-urllib3==2.7.0
+urllib3==2.8.0
