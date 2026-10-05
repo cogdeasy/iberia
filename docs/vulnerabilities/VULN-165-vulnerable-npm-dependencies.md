@@ -17,7 +17,7 @@
 
 | Package | Was | Now | Note |
 |---------|-----|-----|------|
-| `axios` | 0.21.0 | 1.18.1 | Major bump; no call sites to migrate (the app uses `fetch` in `src/lib/api.ts`) |
+| `axios` | 0.21.0 | 1.20.0 | Major bump; no call sites to migrate (the app uses `fetch` in `src/lib/api.ts`) |
 | `lodash` | 4.17.15 | ^4.18.1 | In-major |
 | `js-yaml` | 3.13.1 | 3.15.2 | The v3 line was patched, so the `safeLoad` → `load` migration to js-yaml 4 was not required |
 
@@ -30,6 +30,12 @@ copies pulled in by `eslint` were moved to 4.3.2 in the lockfile at the same tim
 A transitive advisory against `nanoid` (dev-only, pulled in by `postcss` via `vite`) was cleared
 in the lockfile at the same time: GHSA-2v37-7h3g-55p8 (infinite loop in custom generators when
 `size` is zero) affects `nanoid < 3.3.18`, so the lockfile now resolves `nanoid@3.3.18`.
+
+`axios` was first moved to 1.18.1; twelve advisories (GHSA-vh66-26gq-q6x8, GHSA-9fr6-4gfg-395g,
+GHSA-c29m-xwm3-cm6r, GHSA-mghh-pgcx-3jjj, GHSA-x97p-jq2g-jp4f, GHSA-3pq3-5fj3-cg6v,
+GHSA-542g-h47m-68v8, GHSA-j8rh-479h-cp32, GHSA-4hqw-qxg8-jxx2, GHSA-m8m8-qj5v-23w3,
+GHSA-44g4-m2mj-wpvx, GHSA-r4gj-5m52-g5wh — prototype-pollution gadgets, ReDoS, proxy/redirect
+bypasses) then landed against the 1.x line below 1.20.0, so the pin moved to 1.20.0, still in-major.
 
 Residual frontend advisories after remediation are unrelated to this finding: `react-router`
 (fix only in the v7 major). The history below is kept as the demo narrative.
