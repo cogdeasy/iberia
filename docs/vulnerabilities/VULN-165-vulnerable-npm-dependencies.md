@@ -19,13 +19,19 @@
 |---------|-----|-----|------|
 | `axios` | 0.21.0 | 1.20.0 | Major bump; no call sites to migrate (the app uses `fetch` in `src/lib/api.ts`) |
 | `lodash` | 4.17.15 | ^4.18.1 | In-major |
-| `js-yaml` | 3.13.1 | 3.15.2 | The v3 line was patched, so the `safeLoad` → `load` migration to js-yaml 4 was not required |
+| `js-yaml` | 3.13.1 | 4.3.2 | Major bump; no call sites to migrate (nothing imports `js-yaml`), and v4 drops the `argparse@1` → `sprintf-js` chain |
 
 `js-yaml` was first moved to 3.15.0; GHSA-5p4m-2wfm-xmqj (quadratic CPU consumption in `!!omap`
 resolution) subsequently landed against that release and is fixed in 3.15.1, still in-major.
 GHSA-2883-xcg3-v3hh / CVE-2026-84375 (`maxTotalMergeKeys` does not bound CPU use for empty
 merge sources) then landed against 3.15.1 and is fixed in 3.15.2; the dev-only `js-yaml@4`
 copies pulled in by `eslint` were moved to 4.3.2 in the lockfile at the same time.
+
+GHSA-hp3w-g68c-fv3c / CVE-2026-97058 (denial of service through unbounded precision specifiers)
+then landed against `sprintf-js <= 1.1.3` with no patched release. `js-yaml@3` pulls it in through
+`argparse@1`; `js-yaml@4` depends on `argparse@2`, which has no `sprintf-js` dependency, so the pin
+moved to 4.3.2 (the release that carries the GHSA-2883-xcg3-v3hh fix on the v4 line) and both
+`argparse@1` and `sprintf-js` left the lockfile.
 
 A transitive advisory against `nanoid` (dev-only, pulled in by `postcss` via `vite`) was cleared
 in the lockfile at the same time: GHSA-2v37-7h3g-55p8 (infinite loop in custom generators when
