@@ -43,6 +43,13 @@ GHSA-542g-h47m-68v8, GHSA-j8rh-479h-cp32, GHSA-4hqw-qxg8-jxx2, GHSA-m8m8-qj5v-23
 GHSA-44g4-m2mj-wpvx, GHSA-r4gj-5m52-g5wh — prototype-pollution gadgets, ReDoS, proxy/redirect
 bypasses) then landed against the 1.x line below 1.20.0, so the pin moved to 1.20.0, still in-major.
 
+Two advisories then landed against `follow-redirects@1.16.0`, the transitive dependency of
+`axios@1.20.0`: GHSA-q3jh-wrc6-jgq8 (array-form headers bypass cross-origin credential stripping)
+and GHSA-8r9p-f939-6h3c (`sensitiveHeaders` regex escaping can expose credential headers), both
+high and fixed in 1.16.1. The lockfile now resolves `follow-redirects@1.16.1`; `axios` stays on 1.20.0.
+Neither path is reachable from the shipped bundle (browser `axios` uses the XHR/fetch adapter, not
+`follow-redirects`), but the pin is cleared like a real finding.
+
 Residual frontend advisories after remediation are unrelated to this finding: `react-router`
 (fix only in the v7 major). The history below is kept as the demo narrative.
 
