@@ -50,6 +50,12 @@ high and fixed in 1.16.1. The lockfile now resolves `follow-redirects@1.16.1`; `
 Neither path is reachable from the shipped bundle (browser `axios` uses the XHR/fetch adapter, not
 `follow-redirects`), but the pin is cleared like a real finding.
 
+A third `follow-redirects` advisory then landed against 1.16.0–1.16.1: GHSA-mrwp-f3q8-3g9p
+(CVE-2026-116689, high — cross-realm `sensitiveHeaders` arrays are discarded and custom credential
+headers can follow cross-origin redirects), fixed in 1.16.2. The lockfile now resolves
+`follow-redirects@1.16.2`; `axios` stays on 1.20.0. Same reachability as above: not on the
+browser code path, cleared as part of the axios chain.
+
 Residual frontend advisories after remediation are unrelated to this finding: `react-router`
 (fix only in the v7 major). The history below is kept as the demo narrative.
 
